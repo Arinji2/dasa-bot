@@ -1,2 +1,3 @@
 /db/pb_data/*
 !/db/pb_data/.gitkeep
+bot/.env
