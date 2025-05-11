@@ -16,6 +16,7 @@ func (p *PocketbaseAdmin) GetAllBranches() ([]BranchCollection, error) {
 	parsedURL.Path = "/api/collections/branches/records"
 
 	params := url.Values{}
+	params.Add("perPage", "10000")
 
 	parsedURL.RawQuery = params.Encode()
 
