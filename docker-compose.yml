@@ -1,0 +1,9 @@
+services:
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:0.28.0
+    container_name: dasa-pb
+    volumes:
+      - ./pb_data:/pb_data
+    ports:
+      - "8090:8090" 
+    restart: unless-stopped
