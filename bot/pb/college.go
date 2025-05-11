@@ -34,40 +34,40 @@ func (p *PocketbaseAdmin) GetAllColleges() ([]CollegeCollection, error) {
 	return response.Items, nil
 }
 
-func (p *PocketbaseAdmin) GetCollegeByAlias(alias string) ([]CollegeCollection, error) {
+func (p *PocketbaseAdmin) GetCollegeByID(id string) (CollegeCollection, error) {
 	parsedURL, err := url.Parse(p.BaseDomain)
 	if err != nil {
-		return nil, err
+		return CollegeCollection{}, err
 	}
 	parsedURL.Path = "/api/collections/colleges/records"
 
 	params := url.Values{}
-	params.Add("filter", fmt.Sprintf("alias~'%s'", alias))
+	params.Add("filter", fmt.Sprintf("id='%s'", id))
 
 	parsedURL.RawQuery = params.Encode()
 
 	type request struct{}
 	responseBody, err := network.MakeAuthenticatedRequest(parsedURL, "GET", request{}, p.Token)
 	if err != nil {
-		return nil, err
+		return CollegeCollection{}, err
 	}
 
 	var response PbResponse[CollegeCollection]
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
-		return nil, err
+		return CollegeCollection{}, err
 	}
 
 	if len(response.Items) == 0 {
-		return nil, fmt.Errorf("no college found for alias: %s", alias)
+		return CollegeCollection{}, fmt.Errorf("no college found for id: %s", id)
 	}
 
-	if response.TotalItems > 1 {
-		response.Items, err = handleMultipleCollegeAlias(response.Items, alias)
-		if err != nil {
-			return nil, err
-		}
-	}
+	// if response.TotalItems > 1 {
+	// 	response.Items, err = handleMultipleCollegeAlias(response.Items, id)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// }
 
-	return response.Items, nil
+	return response.Items[0], nil
 }
