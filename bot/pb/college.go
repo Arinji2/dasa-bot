@@ -16,6 +16,7 @@ func (p *PocketbaseAdmin) GetAllColleges() ([]CollegeCollection, error) {
 	parsedURL.Path = "/api/collections/colleges/records"
 
 	params := url.Values{}
+	params.Add("perPage", "1000")
 
 	parsedURL.RawQuery = params.Encode()
 
@@ -30,7 +31,6 @@ func (p *PocketbaseAdmin) GetAllColleges() ([]CollegeCollection, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return response.Items, nil
 }
 
