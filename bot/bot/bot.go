@@ -18,6 +18,7 @@ type Bot struct {
 	Session  *discordgo.Session
 	GuildID  string
 	Commands []*discordgo.ApplicationCommand
+	BotEnv   env.Bot
 }
 
 var (
@@ -33,7 +34,7 @@ func NewBot(bot env.Bot) (*Bot, error) {
 		log.Fatalf("Invalid token: %v", err)
 	}
 	ModRole = bot.ModRole
-	return &Bot{Session: s, GuildID: bot.GuildID}, nil
+	return &Bot{Session: s, GuildID: bot.GuildID, BotEnv: bot}, nil
 }
 
 func (b *Bot) Run(pbAdmin *pb.PocketbaseAdmin) {
@@ -42,7 +43,7 @@ func (b *Bot) Run(pbAdmin *pb.PocketbaseAdmin) {
 		log.Printf("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
 	})
 	PbAdmin = pbAdmin
-	refreshData()
+	refreshData(&b.BotEnv)
 	createdCommands := b.registerCommands()
 	b.Commands = createdCommands
 
@@ -95,7 +96,7 @@ var (
 			switch i.Type {
 			case discordgo.InteractionApplicationCommand:
 				timeStart := time.Now()
-				refreshData()
+				refreshData(nil)
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{

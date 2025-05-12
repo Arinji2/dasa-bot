@@ -5,6 +5,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/arinji2/dasa-bot/env"
 	"github.com/arinji2/dasa-bot/pb"
 	"github.com/bwmarrin/discordgo"
 )
@@ -53,7 +54,7 @@ func checkChannel(s *discordgo.Session, i *discordgo.InteractionCreate) bool {
 	return true
 }
 
-func refreshData() {
+func refreshData(botEnv *env.Bot) {
 	log.Println("Refreshing data...")
 
 	locCollegeData, err := PbAdmin.GetAllColleges()
@@ -65,10 +66,12 @@ func refreshData() {
 
 	CollegeCommand.CollegeData = locCollegeData
 	CollegeCommand.PbAdmin = *PbAdmin
+	if botEnv != nil {
+		CollegeCommand.BotEnv = *botEnv
+	}
 }
 
 func (b *Bot) registerCommands() []*discordgo.ApplicationCommand {
-	// Add handlers for application commands
 	b.Session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		switch i.Type {
 		case discordgo.InteractionApplicationCommand:

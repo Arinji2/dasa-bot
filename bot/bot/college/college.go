@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	commands_utils "github.com/arinji2/dasa-bot/commands"
+	"github.com/arinji2/dasa-bot/env"
 	"github.com/arinji2/dasa-bot/pb"
 	"github.com/bwmarrin/discordgo"
-	"github.com/davecgh/go-spew/spew"
 )
 
 const (
@@ -18,10 +18,10 @@ const (
 type CollegeCommand struct {
 	CollegeData []pb.CollegeCollection
 	PbAdmin     pb.PocketbaseAdmin
+	BotEnv      env.Bot
 }
 
 func (c *CollegeCommand) HandleCollegeResponse(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	spew.Dump(i)
 	if i.Type == discordgo.InteractionMessageComponent {
 		c.handlePaginationButtons(s, i)
 		return
@@ -64,7 +64,6 @@ func (c *CollegeCommand) HandleCollegeAutocomplete(s *discordgo.Session, i *disc
 			}
 		}
 	}
-	spew.Dump(choices)
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionApplicationCommandAutocompleteResult,
@@ -127,7 +126,7 @@ func (c *CollegeCommand) handleAllColleges(s *discordgo.Session, i *discordgo.In
 		},
 	}
 
-	err := commands_utils.RespondWithEmbedAndComponents(s, i, "Dasa College Details", description, components)
+	err := commands_utils.RespondWithEmbedAndComponents(s, i, c.BotEnv, "Dasa College Details", description, components)
 	if err != nil {
 		log.Printf("Error sending college response: %v", err)
 	}
@@ -203,7 +202,7 @@ func (c *CollegeCommand) handlePaginationButtons(s *discordgo.Session, i *discor
 	}
 
 	_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Embeds:     &[]*discordgo.MessageEmbed{commands_utils.CreateBaseEmbed("Dasa College Details", description)},
+		Embeds:     &[]*discordgo.MessageEmbed{commands_utils.CreateBaseEmbed("Dasa College Details", description, c.BotEnv)},
 		Components: &components,
 	})
 	if err != nil {
@@ -226,7 +225,7 @@ func (c *CollegeCommand) handleSpecificColleges(s *discordgo.Session, i *discord
 
 	description += fmt.Sprintf(
 		"**Alias:** %s\n\n ", collegeData.Alias)
-	err = commands_utils.RespondWithEmbed(s, i, "DASA College Details", description)
+	err = commands_utils.RespondWithEmbed(s, i, c.BotEnv, "DASA College Details", description)
 	if err != nil {
 		log.Printf("Error sending college response: %v", err)
 	}
