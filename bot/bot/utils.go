@@ -3,6 +3,7 @@ package bot
 import (
 	"log"
 	"slices"
+	"strings"
 
 	"github.com/arinji2/dasa-bot/pb"
 	"github.com/bwmarrin/discordgo"
@@ -67,11 +68,28 @@ func refreshData() {
 }
 
 func (b *Bot) registerCommands() []*discordgo.ApplicationCommand {
+	// Add handlers for application commands
 	b.Session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
-			h(s, i)
+		switch i.Type {
+		case discordgo.InteractionApplicationCommand:
+			if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
+				h(s, i)
+			}
+		case discordgo.InteractionMessageComponent:
+			// Route component interactions to the appropriate handler
+			// For college pagination buttons
+			if i.MessageComponentData().CustomID == "college_page_info" ||
+				strings.HasPrefix(i.MessageComponentData().CustomID, "college_next_") ||
+				strings.HasPrefix(i.MessageComponentData().CustomID, "college_prev_") {
+				CollegeCommand.HandleCollegeResponse(s, i)
+			}
+		case discordgo.InteractionApplicationCommandAutocomplete:
+			if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
+				h(s, i)
+			}
 		}
 	})
+
 	err := b.Session.Open()
 	if err != nil {
 		log.Fatalf("Cannot open the session: %v", err)
