@@ -5,6 +5,7 @@ import (
 	"slices"
 	"strings"
 
+	bot_utils "github.com/arinji2/dasa-bot/bot/utils"
 	"github.com/arinji2/dasa-bot/env"
 	"github.com/arinji2/dasa-bot/pb"
 	"github.com/bwmarrin/discordgo"
@@ -59,15 +60,27 @@ func refreshData(botEnv *env.Bot) {
 
 	locCollegeData, err := PbAdmin.GetAllColleges()
 	if err != nil {
-		log.Panicf("Cannot get articles: %v", err)
+		log.Panicf("Cannot get colleges: %v", err)
 		locCollegeData = make([]pb.CollegeCollection, 0)
 	}
 	log.Printf("Found %d colleges", len(locCollegeData))
 
+	locRankData, err := PbAdmin.GetAllRanks()
+	if err != nil {
+		log.Panicf("Cannot get ranks: %v", err)
+		locRankData = make([]pb.RankCollection, 0)
+	}
+	log.Printf("Found %d ranks", len(locRankData))
+
 	CollegeCommand.CollegeData = locCollegeData
+	RankCommand.CollegeData = locCollegeData
+
+	RankCommand.RankData = locRankData
 	CollegeCommand.PbAdmin = *PbAdmin
+	RankCommand.PbAdmin = *PbAdmin
 	if botEnv != nil {
 		CollegeCommand.BotEnv = *botEnv
+		RankCommand.BotEnv = *botEnv
 	}
 }
 
@@ -85,6 +98,8 @@ func (b *Bot) registerCommands() []*discordgo.ApplicationCommand {
 				strings.HasPrefix(i.MessageComponentData().CustomID, "college_next_") ||
 				strings.HasPrefix(i.MessageComponentData().CustomID, "college_prev_") {
 				CollegeCommand.HandleCollegeResponse(s, i)
+			} else if i.MessageComponentData().CustomID == "college_send_dm" {
+				bot_utils.HandleSendToDMButton(s, i)
 			}
 		case discordgo.InteractionApplicationCommandAutocomplete:
 			if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {

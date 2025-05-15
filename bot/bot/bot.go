@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/arinji2/dasa-bot/bot/college"
+	rank "github.com/arinji2/dasa-bot/bot/ranks"
 	"github.com/arinji2/dasa-bot/env"
 	"github.com/arinji2/dasa-bot/pb"
 	"github.com/bwmarrin/discordgo"
@@ -24,6 +25,7 @@ type Bot struct {
 var (
 	PbAdmin        *pb.PocketbaseAdmin
 	CollegeCommand college.CollegeCommand
+	RankCommand    rank.RankCommand
 	ModRole        []string
 )
 
@@ -87,6 +89,49 @@ var (
 				},
 			},
 		},
+		{
+			Name:        "cutoff",
+			Description: "Displays the ranks of a specified college and branch based on the user provided-year and round",
+			Type:        discordgo.ChatApplicationCommand,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Name:         "college",
+					Description:  "College Name/Alias",
+					Type:         discordgo.ApplicationCommandOptionString,
+					Required:     true,
+					Autocomplete: true,
+				},
+				{
+					Name:         "year",
+					Description:  "Year",
+					Type:         discordgo.ApplicationCommandOptionString,
+					Required:     true,
+					Autocomplete: true,
+				},
+				{
+					Name:         "ciwg",
+					Description:  "Is a CIWG student",
+					Type:         discordgo.ApplicationCommandOptionString,
+					Required:     true,
+					Autocomplete: true,
+				},
+
+				{
+					Name:         "round",
+					Description:  "Round",
+					Type:         discordgo.ApplicationCommandOptionString,
+					Required:     true,
+					Autocomplete: true,
+				},
+				{
+					Name:         "branch",
+					Description:  "Branch (Optional)",
+					Type:         discordgo.ApplicationCommandOptionString,
+					Required:     false,
+					Autocomplete: true,
+				},
+			},
+		},
 	}
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -113,6 +158,17 @@ var (
 				CollegeCommand.HandleCollegeResponse(s, i)
 			case discordgo.InteractionApplicationCommandAutocomplete:
 				CollegeCommand.HandleCollegeAutocomplete(s, i)
+			}
+		},
+
+		"cutoff": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			checkChannel(s, i)
+			fmt.Println("HandleCutoffResponse", i.Type)
+			switch i.Type {
+			case discordgo.InteractionApplicationCommand:
+				RankCommand.HandleCutoffResponse(s, i)
+			case discordgo.InteractionApplicationCommandAutocomplete:
+				RankCommand.HandleRankAutocomplete(s, i)
 			}
 		},
 	}

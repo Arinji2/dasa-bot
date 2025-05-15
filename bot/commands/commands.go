@@ -10,11 +10,12 @@ const (
 	embedColor = 0xA000FF // Garconia Red
 )
 
-func CreateBaseEmbed(title, description string, botEnv env.Bot) *discordgo.MessageEmbed {
+func CreateBaseEmbed(title string, description string, botEnv env.Bot, fields []*discordgo.MessageEmbedField) *discordgo.MessageEmbed {
 	return &discordgo.MessageEmbed{
 		Title:       title,
 		Description: description,
 		Color:       embedColor,
+		Fields:      fields,
 		Footer: &discordgo.MessageEmbedFooter{
 			Text: botFooter,
 		},
@@ -24,25 +25,27 @@ func CreateBaseEmbed(title, description string, botEnv env.Bot) *discordgo.Messa
 	}
 }
 
-func RespondWithEmbed(s *discordgo.Session, i *discordgo.InteractionCreate, botEnv env.Bot, title, description string) error {
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+func RespondWithEmbed(s *discordgo.Session, i *discordgo.InteractionCreate, botEnv env.Bot, title, description string, fields []*discordgo.MessageEmbedField) error {
+	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{CreateBaseEmbed(title, description, botEnv)},
+			Embeds: []*discordgo.MessageEmbed{
+				CreateBaseEmbed(title, description, botEnv, fields),
+			},
 		},
 	})
-	return err
 }
 
-func RespondWithEmbedAndComponents(s *discordgo.Session, i *discordgo.InteractionCreate, botEnv env.Bot, title, description string, components []discordgo.MessageComponent) error {
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+func RespondWithEmbedAndComponents(s *discordgo.Session, i *discordgo.InteractionCreate, botEnv env.Bot, title, description string, fields []*discordgo.MessageEmbedField, components []discordgo.MessageComponent) error {
+	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Embeds:     []*discordgo.MessageEmbed{CreateBaseEmbed(title, description, botEnv)},
+			Embeds: []*discordgo.MessageEmbed{
+				CreateBaseEmbed(title, description, botEnv, fields),
+			},
 			Components: components,
 		},
 	})
-	return err
 }
 
 func RespondWithEphemeralError(s *discordgo.Session, i *discordgo.InteractionCreate, message string) {

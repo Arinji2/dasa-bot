@@ -4,12 +4,97 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strconv"
+	"sync"
 
 	"github.com/arinji2/dasa-bot/network"
 )
 
+func (p *PocketbaseAdmin) GetAllRanks() ([]RankCollection, error) {
+	parsedURL, err := url.Parse(p.BaseDomain)
+	if err != nil {
+		return nil, err
+	}
+	parsedURL.Path = "/api/collections/ranks/records"
+
+	perPage := 1000
+	params := url.Values{}
+	params.Add("perPage", strconv.Itoa(perPage))
+	params.Add("expand", "college,branch")
+	params.Add("page", "1")
+
+	parsedURL.RawQuery = params.Encode()
+
+	type request struct{}
+	responseBody, err := network.MakeAuthenticatedRequest(parsedURL, "GET", request{}, p.Token)
+	if err != nil {
+		return nil, err
+	}
+
+	var initialResponse PbResponse[RankCollection]
+	err = json.Unmarshal(responseBody, &initialResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	total := initialResponse.TotalItems
+	pages := (total + perPage - 1) / perPage // ceil division
+	allItems := initialResponse.Items
+
+	if pages <= 1 {
+		return allItems, nil
+	}
+
+	type result struct {
+		Items []RankCollection
+		Err   error
+	}
+
+	resultsChan := make(chan result, pages-1)
+	var wg sync.WaitGroup
+
+	for page := 2; page <= pages; page++ {
+		wg.Add(1)
+		go func(page int) {
+			defer wg.Done()
+			pageURL := *parsedURL
+			query := url.Values{}
+			query.Add("perPage", strconv.Itoa(perPage))
+			query.Add("page", strconv.Itoa(page))
+			query.Add("expand", "college,branch")
+			pageURL.RawQuery = query.Encode()
+
+			body, err := network.MakeAuthenticatedRequest(&pageURL, "GET", request{}, p.Token)
+			if err != nil {
+				resultsChan <- result{Err: err}
+				return
+			}
+
+			var resp PbResponse[RankCollection]
+			if err := json.Unmarshal(body, &resp); err != nil {
+				resultsChan <- result{Err: err}
+				return
+			}
+
+			resultsChan <- result{Items: resp.Items}
+		}(page)
+	}
+
+	wg.Wait()
+	close(resultsChan)
+
+	for res := range resultsChan {
+		if res.Err != nil {
+			return nil, res.Err
+		}
+		allItems = append(allItems, res.Items...)
+	}
+
+	return allItems, nil
+}
+
 // Get Rank by Year and Round for a College and Branch
-func (p *PocketbaseAdmin) GetSpecificRank(college string, branch string, year int, round int) (RankCollection, error) {
+func (p *PocketbaseAdmin) GetSpecificRank(college string, branch string, year int, round int, ciwg bool) (RankCollection, error) {
 	parsedURL, err := url.Parse(p.BaseDomain)
 	if err != nil {
 		return RankCollection{}, fmt.Errorf("failed to parse base domain: %w", err)
@@ -17,7 +102,7 @@ func (p *PocketbaseAdmin) GetSpecificRank(college string, branch string, year in
 	parsedURL.Path = "/api/collections/ranks/records"
 
 	params := url.Values{}
-	params.Add("filter", fmt.Sprintf("year='%d' && round='%d' && college.alias~'%s' && branch.code='%s'", year, round, college, branch))
+	params.Add("filter", fmt.Sprintf("year='%d' && round='%d' && college.id='%s' && branch.code='%s' && branch.ciwg=%t", year, round, college, branch, ciwg))
 	params.Add("expand", "college,branch")
 
 	parsedURL.RawQuery = params.Encode()
