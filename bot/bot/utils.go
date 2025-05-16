@@ -100,6 +100,8 @@ func (b *Bot) registerCommands() []*discordgo.ApplicationCommand {
 				CollegeCommand.HandleCollegeResponse(s, i)
 			} else if i.MessageComponentData().CustomID == "college_send_dm" {
 				bot_utils.HandleSendToDMButton(s, i)
+			} else if strings.HasPrefix(i.MessageComponentData().CustomID, "select_branch_") {
+				RankCommand.HandleCutoffResponse(s, i)
 			}
 		case discordgo.InteractionApplicationCommandAutocomplete:
 			if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {

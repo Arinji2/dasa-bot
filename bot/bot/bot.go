@@ -115,19 +115,11 @@ var (
 					Required:     true,
 					Autocomplete: true,
 				},
-
 				{
 					Name:         "round",
 					Description:  "Round",
 					Type:         discordgo.ApplicationCommandOptionString,
 					Required:     true,
-					Autocomplete: true,
-				},
-				{
-					Name:         "branch",
-					Description:  "Branch (Optional)",
-					Type:         discordgo.ApplicationCommandOptionString,
-					Required:     false,
 					Autocomplete: true,
 				},
 			},
