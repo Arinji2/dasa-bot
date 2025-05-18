@@ -36,6 +36,18 @@ func RespondWithEmbed(s *discordgo.Session, i *discordgo.InteractionCreate, botE
 	})
 }
 
+func RespondWithEphermalEmbed(s *discordgo.Session, i *discordgo.InteractionCreate, botEnv env.Bot, title, description string, fields []*discordgo.MessageEmbedField) error {
+	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds: []*discordgo.MessageEmbed{
+				CreateBaseEmbed(title, description, botEnv, fields),
+			},
+			Flags: discordgo.MessageFlagsEphemeral,
+		},
+	})
+}
+
 func RespondWithEmbedAndComponents(s *discordgo.Session, i *discordgo.InteractionCreate, botEnv env.Bot, title, description string, fields []*discordgo.MessageEmbedField, components []discordgo.MessageComponent) error {
 	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,

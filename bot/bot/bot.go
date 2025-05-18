@@ -122,6 +122,14 @@ var (
 					Required:     true,
 					Autocomplete: true,
 				},
+
+				{
+					Name:         "all",
+					Description:  "See All Branches for the specified College",
+					Type:         discordgo.ApplicationCommandOptionString,
+					Required:     false,
+					Autocomplete: true,
+				},
 			},
 		},
 	}

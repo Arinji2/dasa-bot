@@ -41,6 +41,10 @@ func (r *RankCommand) HandleCutoffResponse(s *discordgo.Session, i *discordgo.In
 	if len(data.Options) == 4 {
 		r.showBranchSelect(s, i, data)
 	}
+
+	if len(data.Options) == 5 {
+		r.handleCollegeBranches(s, i, data)
+	}
 }
 
 func (r *RankCommand) HandleRankAutocomplete(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -127,6 +131,12 @@ func (r *RankCommand) HandleRankAutocomplete(s *discordgo.Session, i *discordgo.
 				count++
 			}
 		}
+
+	case data.Options[4].Focused:
+		choices = append(choices, &discordgo.ApplicationCommandOptionChoice{
+			Name:  "Yes",
+			Value: "true",
+		})
 	}
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{

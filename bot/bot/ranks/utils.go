@@ -1,6 +1,7 @@
 package rank
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -19,6 +20,19 @@ func (r *RankCommand) branchesForCollege(collegeID string, ciwg bool, year, roun
 		}
 	}
 	return branches
+}
+
+func (r *RankCommand) ranksForCollege(collegeID string, ciwg bool, year, round int) ([]pb.RankCollection, error) {
+	rank := []pb.RankCollection{}
+	for _, v := range r.RankData {
+		if v.College == collegeID && v.Expand.Branch.Ciwg == ciwg && v.Year == year && v.Round == round {
+			rank = append(rank, v)
+		}
+	}
+	if len(rank) == 0 {
+		return rank, errors.New("no ranks found for the selected criteria")
+	}
+	return rank, nil
 }
 
 func (r *RankCommand) showBranchSelect(s *discordgo.Session, i *discordgo.InteractionCreate, data discordgo.ApplicationCommandInteractionData) {
@@ -98,6 +112,90 @@ func (r *RankCommand) showBranchSelect(s *discordgo.Session, i *discordgo.Intera
 			Name:   "Total Available Branches",
 			Value:  fmt.Sprintf("%d", len(branches)),
 			Inline: true,
+		},
+	}
+
+	err = commands_utils.RespondWithEphemeralEmbedAndComponents(s, i, r.BotEnv, title, description, fields, components)
+	if err != nil {
+		log.Printf("Error sending branch selection UI: %v", err)
+	}
+}
+
+func (r *RankCommand) handleCollegeBranches(s *discordgo.Session, i *discordgo.InteractionCreate, data discordgo.ApplicationCommandInteractionData) {
+	collegeID := data.Options[0].StringValue()
+	year := data.Options[1].StringValue()
+	ciwg := data.Options[2].StringValue()
+	round := data.Options[3].StringValue()
+
+	yearInt, err := strconv.Atoi(year)
+	if err != nil {
+		log.Printf("Error converting year to int: %v", err)
+		commands_utils.RespondWithEphemeralError(s, i, "Invalid year format")
+		return
+	}
+
+	roundInt, err := strconv.Atoi(round)
+	if err != nil {
+		log.Printf("Error converting round to int: %v", err)
+		commands_utils.RespondWithEphemeralError(s, i, "Invalid round format")
+		return
+	}
+
+	ciwgBool := (ciwg == "true")
+
+	collegeData, err := r.PbAdmin.GetCollegeByID(collegeID)
+	if err != nil {
+		log.Printf("Error fetching college data: %v", err)
+		commands_utils.RespondWithEphemeralError(s, i, "Could not retrieve college data")
+		return
+	}
+
+	branches := r.branchesForCollege(collegeID, ciwgBool, yearInt, roundInt)
+	if len(branches) == 0 {
+		commands_utils.RespondWithEphemeralError(s, i, fmt.Sprintf("No branches found for %s with the selected criteria", collegeData.Name))
+		return
+	}
+
+	title := fmt.Sprintf("Cutoffs for %s", collegeData.Name)
+	description := fmt.Sprintf("**Year:** %s\n**Round:** %s\n**%s Student**\n\n",
+		year, round,
+		map[bool]string{true: "CIWG", false: "Non-CIWG"}[ciwgBool])
+
+	fields := []*discordgo.MessageEmbedField{}
+
+	rankData, err := r.ranksForCollege(collegeID, ciwgBool, yearInt, roundInt)
+	if err != nil {
+		commands_utils.RespondWithEphemeralError(s, i, fmt.Sprintf("No ranks found for %s with the selected criteria", collegeData.Name))
+		return
+	}
+
+	for _, rank := range rankData {
+		ciwgString := ""
+		if ciwgBool {
+			ciwgString = " (CIWG)"
+		}
+
+		fieldCiwgString := "DASA"
+		if ciwgBool {
+			fieldCiwgString = "CIWG"
+		}
+
+		fields = append(fields, &discordgo.MessageEmbedField{
+			Name:   fmt.Sprintf("%s%s", rank.Expand.Branch.Code, ciwgString),
+			Value:  fmt.Sprintf("JEE OPENING: %d\n JEE CLOSING: %d\n %s OPENING: %d\n %s CLOSING: %d", rank.JEE_OPEN, rank.JEE_CLOSE, fieldCiwgString, rank.DASA_OPEN, fieldCiwgString, rank.DASA_CLOSE),
+			Inline: true,
+		})
+	}
+
+	components := []discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Label:    "Send To DM",
+					Style:    discordgo.PrimaryButton,
+					CustomID: "college_send_dm",
+				},
+			},
 		},
 	}
 
