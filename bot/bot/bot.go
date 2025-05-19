@@ -47,6 +47,7 @@ func (b *Bot) Run(pbAdmin *pb.PocketbaseAdmin) {
 	PbAdmin = pbAdmin
 	refreshData(&b.BotEnv)
 	createdCommands := b.registerCommands()
+	b.Session.UpdateCustomStatus("Padhlo chahe kahi se, selection hoga dasa se")
 	b.Commands = createdCommands
 
 	log.Println("Bot is now running.")
