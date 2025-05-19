@@ -2,7 +2,6 @@ package rank
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/arinji2/dasa-bot/pb"
@@ -10,7 +9,6 @@ import (
 
 // Handles both id and name.
 func (r *RankCommand) getCollegeData(collegeID string) (*pb.CollegeCollection, error) {
-	fmt.Println(collegeID)
 	if collegeID == "" {
 		return nil, errors.New("no college ID provided")
 	}

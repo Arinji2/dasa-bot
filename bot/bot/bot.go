@@ -164,11 +164,12 @@ var (
 
 		"cutoff": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			checkChannel(s, i)
-			fmt.Println("HandleCutoffResponse", i.Type)
 			switch i.Type {
 			case discordgo.InteractionApplicationCommand:
+				log.Println("Handling Cutoff Response")
 				RankCommand.HandleCutoffResponse(s, i)
 			case discordgo.InteractionApplicationCommandAutocomplete:
+				log.Println("Handling Cutoff Autocomplete")
 				RankCommand.HandleRankAutocomplete(s, i)
 			}
 		},
