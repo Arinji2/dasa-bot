@@ -72,14 +72,11 @@ func refreshData(botEnv *env.Bot) {
 	}
 	log.Printf("Found %d ranks", len(locRankData))
 
-	CollegeCommand.CollegeData = locCollegeData
 	RankCommand.CollegeData = locCollegeData
 
 	RankCommand.RankData = locRankData
-	CollegeCommand.PbAdmin = *PbAdmin
 	RankCommand.PbAdmin = *PbAdmin
 	if botEnv != nil {
-		CollegeCommand.BotEnv = *botEnv
 		RankCommand.BotEnv = *botEnv
 	}
 }
@@ -92,13 +89,7 @@ func (b *Bot) registerCommands() []*discordgo.ApplicationCommand {
 				h(s, i)
 			}
 		case discordgo.InteractionMessageComponent:
-			// Route component interactions to the appropriate handler
-			// For college pagination buttons
-			if i.MessageComponentData().CustomID == "college_page_info" ||
-				strings.HasPrefix(i.MessageComponentData().CustomID, "college_next_") ||
-				strings.HasPrefix(i.MessageComponentData().CustomID, "college_prev_") {
-				CollegeCommand.HandleCollegeResponse(s, i)
-			} else if i.MessageComponentData().CustomID == "college_send_dm" {
+			if i.MessageComponentData().CustomID == "college_send_dm" {
 				bot_utils.HandleSendToDMButton(s, i)
 			} else if strings.HasPrefix(i.MessageComponentData().CustomID, "select_branch_") {
 				RankCommand.HandleCutoffResponse(s, i)

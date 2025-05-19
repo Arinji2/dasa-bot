@@ -8,7 +8,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/arinji2/dasa-bot/bot/college"
 	rank "github.com/arinji2/dasa-bot/bot/ranks"
 	"github.com/arinji2/dasa-bot/env"
 	"github.com/arinji2/dasa-bot/pb"
@@ -23,10 +22,9 @@ type Bot struct {
 }
 
 var (
-	PbAdmin        *pb.PocketbaseAdmin
-	CollegeCommand college.CollegeCommand
-	RankCommand    rank.RankCommand
-	ModRole        []string
+	PbAdmin     *pb.PocketbaseAdmin
+	RankCommand rank.RankCommand
+	ModRole     []string
 )
 
 func NewBot(bot env.Bot) (*Bot, error) {
@@ -75,20 +73,6 @@ var (
 			Description: "Refresh the data of the bot",
 			Type:        discordgo.ChatApplicationCommand,
 			Options:     []*discordgo.ApplicationCommandOption{},
-		},
-		{
-			Name:        "get-colleges",
-			Description: "Get the colleges from Rounds",
-			Type:        discordgo.ChatApplicationCommand,
-			Options: []*discordgo.ApplicationCommandOption{
-				{
-					Name:         "college-name",
-					Description:  "College Name/Alias (Optional)",
-					Type:         discordgo.ApplicationCommandOptionString,
-					Required:     false,
-					Autocomplete: true,
-				},
-			},
 		},
 		{
 			Name:        "cutoff",
@@ -150,15 +134,6 @@ var (
 						Flags:   discordgo.MessageFlagsEphemeral,
 					},
 				})
-			}
-		},
-		"get-colleges": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			checkChannel(s, i)
-			switch i.Type {
-			case discordgo.InteractionApplicationCommand:
-				CollegeCommand.HandleCollegeResponse(s, i)
-			case discordgo.InteractionApplicationCommandAutocomplete:
-				CollegeCommand.HandleCollegeAutocomplete(s, i)
 			}
 		},
 
