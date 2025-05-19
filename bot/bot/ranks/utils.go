@@ -1,39 +1,14 @@
 package rank
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 
 	commands_utils "github.com/arinji2/dasa-bot/commands"
-	"github.com/arinji2/dasa-bot/pb"
 	"github.com/bwmarrin/discordgo"
 )
-
-func (r *RankCommand) branchesForCollege(collegeID string, ciwg bool, year, round int) []pb.BranchCollection {
-	branches := []pb.BranchCollection{}
-	for _, v := range r.RankData {
-		if v.College == collegeID && v.Expand.Branch.Ciwg == ciwg && v.Year == year && v.Round == round {
-			branches = append(branches, v.Expand.Branch)
-		}
-	}
-	return branches
-}
-
-func (r *RankCommand) ranksForCollege(collegeID string, ciwg bool, year, round int) ([]pb.RankCollection, error) {
-	rank := []pb.RankCollection{}
-	for _, v := range r.RankData {
-		if v.College == collegeID && v.Expand.Branch.Ciwg == ciwg && v.Year == year && v.Round == round {
-			rank = append(rank, v)
-		}
-	}
-	if len(rank) == 0 {
-		return rank, errors.New("no ranks found for the selected criteria")
-	}
-	return rank, nil
-}
 
 func (r *RankCommand) showBranchSelect(s *discordgo.Session, i *discordgo.InteractionCreate, data discordgo.ApplicationCommandInteractionData) {
 	collegeID := data.Options[0].StringValue()
@@ -57,14 +32,14 @@ func (r *RankCommand) showBranchSelect(s *discordgo.Session, i *discordgo.Intera
 
 	ciwgBool := (ciwg == "true")
 
-	collegeData, err := r.PbAdmin.GetCollegeByID(collegeID)
+	collegeData, err := r.getCollegeData(collegeID)
 	if err != nil {
 		log.Printf("Error fetching college data: %v", err)
 		commands_utils.RespondWithEphemeralError(s, i, "Could not retrieve college data")
 		return
 	}
 
-	branches := r.branchesForCollege(collegeID, ciwgBool, yearInt, roundInt)
+	branches := r.branchesForCollege(collegeData.ID, ciwgBool, yearInt, roundInt)
 	if len(branches) == 0 {
 		commands_utils.RespondWithEphemeralError(s, i, fmt.Sprintf("No branches found for %s with the selected criteria", collegeData.Name))
 		return
@@ -143,14 +118,15 @@ func (r *RankCommand) handleCollegeBranches(s *discordgo.Session, i *discordgo.I
 
 	ciwgBool := (ciwg == "true")
 
-	collegeData, err := r.PbAdmin.GetCollegeByID(collegeID)
+	collegeData, err := r.getCollegeData(collegeID)
 	if err != nil {
 		log.Printf("Error fetching college data: %v", err)
 		commands_utils.RespondWithEphemeralError(s, i, "Could not retrieve college data")
 		return
 	}
 
-	branches := r.branchesForCollege(collegeID, ciwgBool, yearInt, roundInt)
+	branches := r.branchesForCollege(collegeData.ID, ciwgBool, yearInt, roundInt)
+
 	if len(branches) == 0 {
 		commands_utils.RespondWithEphemeralError(s, i, fmt.Sprintf("No branches found for %s with the selected criteria", collegeData.Name))
 		return
@@ -163,7 +139,7 @@ func (r *RankCommand) handleCollegeBranches(s *discordgo.Session, i *discordgo.I
 
 	fields := []*discordgo.MessageEmbedField{}
 
-	rankData, err := r.ranksForCollege(collegeID, ciwgBool, yearInt, roundInt)
+	rankData, err := r.ranksForCollege(collegeData.ID, ciwgBool, yearInt, roundInt)
 	if err != nil {
 		commands_utils.RespondWithEphemeralError(s, i, fmt.Sprintf("No ranks found for %s with the selected criteria", collegeData.Name))
 		return
@@ -247,13 +223,13 @@ func (r *RankCommand) handleBranchSelection(s *discordgo.Session, i *discordgo.I
 		return
 	}
 
-	collegeData, err := r.PbAdmin.GetCollegeByID(collegeID)
+	collegeData, err := r.getCollegeData(collegeID)
 	if err != nil {
 		log.Printf("Error fetching college data: %v", err)
 		return
 	}
 
-	rankData, err := r.PbAdmin.GetSpecificRank(collegeID, branchCode, yearInt, roundInt, ciwgBool)
+	rankData, err := r.specificRank(collegeData.ID, branchCode, ciwgBool, yearInt, roundInt)
 	if err != nil {
 		log.Printf("Error fetching rank data: %v", err)
 		return
@@ -281,6 +257,11 @@ func (r *RankCommand) handleBranchSelection(s *discordgo.Session, i *discordgo.I
 
 	title := fmt.Sprintf("Cutoffs for %s", collegeData.Name)
 
+	ciwgString := "DASA"
+	if ciwgBool {
+		ciwgString = " CIWG"
+	}
+
 	fields := []*discordgo.MessageEmbedField{
 		{
 			Name:   "JEE Opening Rank",
@@ -293,12 +274,12 @@ func (r *RankCommand) handleBranchSelection(s *discordgo.Session, i *discordgo.I
 			Inline: true,
 		},
 		{
-			Name:   "DASA Opening Rank",
+			Name:   fmt.Sprintf("%s Opening Rank", ciwgString),
 			Value:  fmt.Sprintf("%d", rankData.DASA_OPEN),
 			Inline: true,
 		},
 		{
-			Name:   "DASA Closing Rank",
+			Name:   fmt.Sprintf("%s Closing Rank", ciwgString),
 			Value:  fmt.Sprintf("%d", rankData.DASA_CLOSE),
 			Inline: true,
 		},
