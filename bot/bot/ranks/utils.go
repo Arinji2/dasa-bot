@@ -3,12 +3,27 @@ package rank
 import (
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 
 	commands_utils "github.com/arinji2/dasa-bot/commands"
 	"github.com/bwmarrin/discordgo"
 )
+
+var AnalyzeBranch = []string{
+	"Computer Science",
+	"Electrical Engineering",
+	"Mechanical Engineering",
+	"Civil Engineering",
+	"Chemical Engineering",
+	"Electronics Engineering",
+	"Information Technology",
+}
+
+var Devations = []string{
+	"10", "20", "30", "40",
+}
 
 func (r *RankCommand) showBranchSelect(s *discordgo.Session, i *discordgo.InteractionCreate, data discordgo.ApplicationCommandInteractionData) {
 	collegeID := data.Options[0].StringValue()
@@ -91,6 +106,49 @@ func (r *RankCommand) showBranchSelect(s *discordgo.Session, i *discordgo.Intera
 	}
 
 	err = commands_utils.RespondWithEphemeralEmbedAndComponents(s, i, r.BotEnv, title, description, fields, components)
+	if err != nil {
+		log.Printf("Error sending branch selection UI: %v", err)
+	}
+}
+
+func (r *RankCommand) showAnalyzeBranchSelect(s *discordgo.Session, i *discordgo.InteractionCreate, data discordgo.ApplicationCommandInteractionData) {
+	rank := data.Options[0].StringValue()
+	ciwg := data.Options[1].StringValue()
+	deviation := data.Options[2].StringValue()
+	if !slices.Contains(Devations, deviation) {
+		deviation = "20"
+	}
+
+	ciwgBool := (ciwg == "true")
+
+	var components []discordgo.MessageComponent
+	var options []discordgo.SelectMenuOption
+	for i, branch := range AnalyzeBranch {
+		desc := branch
+
+		options = append(options, discordgo.SelectMenuOption{
+			Label:       branch,
+			Description: desc,
+			Value:       fmt.Sprintf("%s,%s,%s,%d", rank, ciwg, deviation, i),
+		})
+	}
+
+	components = append(components, discordgo.ActionsRow{
+		Components: []discordgo.MessageComponent{
+			discordgo.SelectMenu{
+				CustomID:    "select_analyze_branch",
+				Placeholder: "Select a branch to see its analysis with your rank",
+				Options:     options,
+			},
+		},
+	})
+
+	title := "Analyze for Rank"
+	description := fmt.Sprintf("**Rank:** %s\n**%s Student**\n\nPlease select a branch to view cutoffs",
+		rank,
+		map[bool]string{true: "CIWG", false: "Non-CIWG"}[ciwgBool])
+
+	err := commands_utils.RespondWithEphemeralEmbedAndComponents(s, i, r.BotEnv, title, description, nil, components)
 	if err != nil {
 		log.Printf("Error sending branch selection UI: %v", err)
 	}
