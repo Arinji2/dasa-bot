@@ -117,6 +117,35 @@ var (
 				},
 			},
 		},
+
+		{
+			Name:        "analyze",
+			Description: "Shows colleges and branches with closing ranks near your rank and given deviation",
+			Type:        discordgo.ChatApplicationCommand,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Name:         "rank",
+					Description:  "The JEE rank you want to analyze",
+					Type:         discordgo.ApplicationCommandOptionString,
+					Required:     true,
+					Autocomplete: false,
+				},
+				{
+					Name:         "ciwg",
+					Description:  "Is a CIWG student",
+					Type:         discordgo.ApplicationCommandOptionString,
+					Required:     true,
+					Autocomplete: true,
+				},
+				{
+					Name:         "deviation",
+					Description:  "Allowed deviation from the rank. Higher deviation means lower accuracy.",
+					Type:         discordgo.ApplicationCommandOptionString,
+					Required:     false,
+					Autocomplete: true,
+				},
+			},
+		},
 	}
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -142,10 +171,22 @@ var (
 			switch i.Type {
 			case discordgo.InteractionApplicationCommand:
 				log.Println("Handling Cutoff Response")
-				RankCommand.HandleCutoffResponse(s, i)
+				RankCommand.HandleRankCutoffResponse(s, i)
 			case discordgo.InteractionApplicationCommandAutocomplete:
 				log.Println("Handling Cutoff Autocomplete")
-				RankCommand.HandleRankAutocomplete(s, i)
+				RankCommand.HandleRankCutoffAutocomplete(s, i)
+			}
+		},
+
+		"analyze": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			checkChannel(s, i)
+			switch i.Type {
+			case discordgo.InteractionApplicationCommand:
+				log.Println("Handling Analyze Response")
+				RankCommand.HandleAnalyzeResponse(s, i)
+			case discordgo.InteractionApplicationCommandAutocomplete:
+				log.Println("Handling Analyze Autocomplete")
+				RankCommand.HandleAnalyzeAutocomplete(s, i)
 			}
 		},
 	}
