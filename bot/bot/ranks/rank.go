@@ -22,7 +22,7 @@ type RankCommand struct {
 	BotEnv      env.Bot
 }
 
-func (r *RankCommand) HandleCutoffResponse(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (r *RankCommand) HandleRankCutoffResponse(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.Type == discordgo.InteractionMessageComponent {
 		customID := i.MessageComponentData().CustomID
 
@@ -47,7 +47,7 @@ func (r *RankCommand) HandleCutoffResponse(s *discordgo.Session, i *discordgo.In
 	}
 }
 
-func (r *RankCommand) HandleRankAutocomplete(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (r *RankCommand) HandleRankCutoffAutocomplete(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	data := i.ApplicationCommandData()
 	var choices []*discordgo.ApplicationCommandOptionChoice
 
