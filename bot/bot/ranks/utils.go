@@ -114,9 +114,12 @@ func (r *RankCommand) showBranchSelect(s *discordgo.Session, i *discordgo.Intera
 func (r *RankCommand) showAnalyzeBranchSelect(s *discordgo.Session, i *discordgo.InteractionCreate, data discordgo.ApplicationCommandInteractionData) {
 	rank := data.Options[0].StringValue()
 	ciwg := data.Options[1].StringValue()
-	deviation := data.Options[2].StringValue()
-	if !slices.Contains(Devations, deviation) {
-		deviation = "20"
+	deviation := "10"
+	if len(data.Options) == 3 {
+		deviation = data.Options[2].StringValue()
+		if !slices.Contains(Devations, deviation) {
+			deviation = "10"
+		}
 	}
 
 	ciwgBool := (ciwg == "true")
@@ -351,3 +354,4 @@ func (r *RankCommand) handleBranchSelection(s *discordgo.Session, i *discordgo.I
 		log.Printf("Error updating message with cutoff data: %v", err)
 	}
 }
+

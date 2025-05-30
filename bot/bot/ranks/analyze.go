@@ -24,7 +24,7 @@ func (r *RankCommand) HandleAnalyzeResponse(s *discordgo.Session, i *discordgo.I
 	}
 
 	data := i.ApplicationCommandData()
-	if len(data.Options) == 3 {
+	if len(data.Options) >= 2 {
 		r.showAnalyzeBranchSelect(s, i, data)
 	}
 }
