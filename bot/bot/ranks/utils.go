@@ -355,3 +355,85 @@ func (r *RankCommand) handleBranchSelection(s *discordgo.Session, i *discordgo.I
 	}
 }
 
+func (r *RankCommand) handleAnalyzeSelection(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	values := i.MessageComponentData().Values
+	if len(values) != 1 {
+		log.Printf("Unexpected number of values in branch selection: %v", len(values))
+		return
+	}
+
+	// Format: rank:ciwg:deviation:branchID
+	params := strings.Split(values[0], ",")
+	if len(params) != 4 {
+		log.Printf("Invalid branch selection value format for analyze selection")
+		return
+	}
+
+	rank := params[0]
+	ciwg := params[1]
+	deviation := params[2]
+	branchCode := params[3]
+
+	branchID, err := strconv.Atoi(branchCode)
+	if err != nil {
+		log.Printf("Error converting branch code to int: %v", err)
+		return
+	}
+
+	branchData := AnalyzeBranch[branchID]
+
+	ciwgBool := (ciwg == "true")
+
+	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredMessageUpdate,
+	})
+	if err != nil {
+		log.Printf("Error acknowledging branch selection: %v", err)
+		return
+	}
+
+	matchingRankChunks, err := r.findMatchingRanks(rank, deviation, branchData, ciwgBool)
+	if err != nil {
+		log.Printf("Error fetching matching data: %v", err)
+		return
+	}
+
+	matchingRanks := matchingRankChunks[0]
+	description := ""
+	if ciwgBool {
+		description += fmt.Sprintf("Course: %s (CIWG)\n", branchData)
+	} else {
+		description += fmt.Sprintf("Course: %s\n", branchData)
+	}
+
+	components := []discordgo.MessageComponent{
+		discordgo.ActionsRow{
+			Components: []discordgo.MessageComponent{
+				discordgo.Button{
+					Label:    "Send To DM",
+					Style:    discordgo.PrimaryButton,
+					CustomID: "college_send_dm",
+				},
+			},
+		},
+	}
+
+	title := "Chances based off of your JEE(Main) CRL-Rank"
+
+	fields := []*discordgo.MessageEmbedField{}
+	for i, rank := range matchingRanks {
+		fields = append(fields, &discordgo.MessageEmbedField{
+			Name:   fmt.Sprintf("%d. %s", i+1, rank.Expand.College.Name),
+			Value:  fmt.Sprintf("JEE CLOSING: %d", rank.JEE_OPEN),
+			Inline: true,
+		})
+	}
+
+	_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		Embeds:     &[]*discordgo.MessageEmbed{commands_utils.CreateBaseEmbed(title, description, r.BotEnv, fields)},
+		Components: &components,
+	})
+	if err != nil {
+		log.Printf("Error updating message with analyze data: %v", err)
+	}
+}

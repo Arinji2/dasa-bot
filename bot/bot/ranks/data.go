@@ -2,6 +2,7 @@ package rank
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/arinji2/dasa-bot/pb"
@@ -64,4 +65,65 @@ func (r *RankCommand) specificRank(collegeID, branchCode string, ciwg bool, year
 		return rank, errors.New("no rank found for the selected criteria")
 	}
 	return rank, nil
+}
+
+func (r *RankCommand) findMatchingRanks(rankStr, deviationStr, branchData string, ciwg bool) ([][]pb.RankCollection, error) {
+	inputRank, err := strconv.Atoi(rankStr)
+	if err != nil {
+		return nil, errors.New("invalid rank value")
+	}
+
+	deviationPercent, err := strconv.Atoi(deviationStr)
+	if err != nil {
+		return nil, errors.New("invalid deviation percentage")
+	}
+
+	lowerBound := inputRank - (inputRank * deviationPercent / 100)
+
+	collegeSet := make(map[string]struct{})
+	collegeToRank := make(map[string]pb.RankCollection)
+
+	for _, v := range r.RankData {
+		if v.Expand.Branch.Ciwg != ciwg {
+			continue
+		}
+
+		if !strings.Contains(strings.ToLower(v.Expand.Branch.Name), strings.ToLower(branchData)) {
+			continue
+		}
+
+		openRank := v.JEE_OPEN
+		closeRank := v.JEE_CLOSE
+
+		if openRank == 0 && closeRank == 0 {
+			continue
+		}
+
+		if closeRank >= inputRank || openRank >= inputRank || (openRank <= inputRank && closeRank >= lowerBound) {
+			if _, exists := collegeSet[v.College]; !exists {
+				collegeSet[v.College] = struct{}{}
+				collegeToRank[v.College] = v
+			}
+		}
+	}
+
+	if len(collegeToRank) == 0 {
+		return nil, errors.New("no ranks matched the given criteria")
+	}
+
+	var chunks [][]pb.RankCollection
+	currentChunk := []pb.RankCollection{}
+
+	for _, rank := range collegeToRank {
+		currentChunk = append(currentChunk, rank)
+		if len(currentChunk) == 10 {
+			chunks = append(chunks, currentChunk)
+			currentChunk = []pb.RankCollection{}
+		}
+	}
+	if len(currentChunk) > 0 {
+		chunks = append(chunks, currentChunk)
+	}
+
+	return chunks, nil
 }
