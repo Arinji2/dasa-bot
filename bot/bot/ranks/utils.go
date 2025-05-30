@@ -8,17 +8,19 @@ import (
 	"strings"
 
 	commands_utils "github.com/arinji2/dasa-bot/commands"
+	"github.com/arinji2/dasa-bot/pb"
 	"github.com/bwmarrin/discordgo"
 )
 
 var AnalyzeBranch = []string{
-	"Computer Science",
-	"Electrical Engineering",
+	"Computer Science: cse, computer science, cs",
+	"Electrical Engineering: electronics, electrical, elec, ece, eee",
 	"Mechanical Engineering",
 	"Civil Engineering",
 	"Chemical Engineering",
-	"Electronics Engineering",
 	"Information Technology",
+	"Architecture: architecture, arch",
+	"Metallurgical Engineering",
 }
 
 var Devations = []string{
@@ -127,11 +129,14 @@ func (r *RankCommand) showAnalyzeBranchSelect(s *discordgo.Session, i *discordgo
 	var components []discordgo.MessageComponent
 	var options []discordgo.SelectMenuOption
 	for i, branch := range AnalyzeBranch {
-		desc := branch
+		branchName := branch
+		if strings.Contains(branch, ":") {
+			branchName = strings.Split(branch, ":")[0]
+		}
 
 		options = append(options, discordgo.SelectMenuOption{
-			Label:       branch,
-			Description: desc,
+			Label:       branchName,
+			Description: branchName,
 			Value:       fmt.Sprintf("%s,%s,%s,%d", rank, ciwg, deviation, i),
 		})
 	}
@@ -355,3 +360,194 @@ func (r *RankCommand) handleBranchSelection(s *discordgo.Session, i *discordgo.I
 	}
 }
 
+func (r *RankCommand) handleAnalyzeSelection(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	values := i.MessageComponentData().Values
+	if len(values) != 1 {
+		log.Printf("Unexpected number of values in branch selection: %v", len(values))
+		return
+	}
+
+	// Format: rank,ciwg,deviation,branchID
+	params := strings.Split(values[0], ",")
+	if len(params) != 4 {
+		log.Printf("Invalid branch selection value format for analyze selection")
+		return
+	}
+
+	rank := params[0]
+	ciwg := params[1]
+	deviation := params[2]
+	branchCode := params[3]
+
+	branchID, err := strconv.Atoi(branchCode)
+	if err != nil {
+		log.Printf("Error converting branch code to int: %v", err)
+		return
+	}
+
+	branchData := AnalyzeBranch[branchID]
+	ciwgBool := (ciwg == "true")
+
+	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredMessageUpdate,
+	})
+	if err != nil {
+		log.Printf("Error acknowledging branch selection: %v", err)
+		return
+	}
+
+	matchingRankChunks, err := r.findMatchingRanks(rank, deviation, branchData, ciwgBool)
+	if err != nil {
+		log.Printf("Error fetching matching data: %v", err)
+		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+			Embeds: &[]*discordgo.MessageEmbed{commands_utils.CreateBaseEmbed("Could not find ranks", "Could not find any ranks matching your selections.", r.BotEnv, nil)},
+		})
+
+		return
+	}
+
+	// Start with page 0
+	currentPage := 0
+	r.displayAnalyzePage(s, i, matchingRankChunks, currentPage, branchData, ciwgBool, rank, ciwg, deviation, branchCode)
+}
+
+func (r *RankCommand) displayAnalyzePage(s *discordgo.Session, i *discordgo.InteractionCreate, matchingRankChunks [][]pb.RankCollection, currentPage int, branchData string, ciwgBool bool, rank, ciwg, deviation, branchCode string) {
+	if currentPage < 0 || currentPage >= len(matchingRankChunks) {
+		log.Printf("Invalid page number: %d", currentPage)
+		return
+	}
+
+	matchingRanks := matchingRankChunks[currentPage]
+	description := ""
+	if ciwgBool {
+		description += fmt.Sprintf("Course: %s (CIWG)\n", strings.Split(branchData, ":")[0])
+	} else {
+		description += fmt.Sprintf("Course: %s\n", strings.Split(branchData, ":")[0])
+	}
+	description += fmt.Sprintf("Page %d of %d", currentPage+1, len(matchingRankChunks))
+
+	// Create pagination buttons
+	var components []discordgo.MessageComponent
+	var buttons []discordgo.MessageComponent
+
+	// Only show pagination if there are multiple pages
+	if len(matchingRankChunks) > 1 {
+		// Previous page button
+		prevPage := currentPage - 1
+		if prevPage < 0 {
+			prevPage = len(matchingRankChunks) - 1 // Loop to last page
+		}
+		buttons = append(buttons, discordgo.Button{
+			Label:    "Previous",
+			Style:    discordgo.SecondaryButton,
+			CustomID: fmt.Sprintf("aprev_%s_%s_%s_%s_%d", rank, ciwg, deviation, branchCode, prevPage),
+		})
+
+		// Current page button (disabled)
+		buttons = append(buttons, discordgo.Button{
+			Label:    fmt.Sprintf("%d/%d", currentPage+1, len(matchingRankChunks)),
+			Style:    discordgo.SecondaryButton,
+			CustomID: fmt.Sprintf("acur_%d", currentPage),
+			Disabled: true,
+		})
+
+		// Next page button
+		nextPage := currentPage + 1
+		if nextPage >= len(matchingRankChunks) {
+			nextPage = 0 // Loop to first page
+		}
+		buttons = append(buttons, discordgo.Button{
+			Label:    "Next",
+			Style:    discordgo.SecondaryButton,
+			CustomID: fmt.Sprintf("anext_%s_%s_%s_%s_%d", rank, ciwg, deviation, branchCode, nextPage),
+		})
+	}
+
+	// Add Send to DM button
+	buttons = append(buttons, discordgo.Button{
+		Label:    "Send To DM",
+		Style:    discordgo.PrimaryButton,
+		CustomID: "college_send_dm",
+	})
+
+	components = append(components, discordgo.ActionsRow{
+		Components: buttons,
+	})
+
+	title := "Chances based off of your JEE(Main) CRL-Rank"
+
+	fields := []*discordgo.MessageEmbedField{}
+	for idx, rankData := range matchingRanks {
+		fields = append(fields, &discordgo.MessageEmbedField{
+			Name:   fmt.Sprintf("%d. %s", (currentPage*10)+idx+1, rankData.Expand.College.Name),
+			Value:  fmt.Sprintf("JEE CLOSING: %d\n BRANCH CODE: %s", rankData.JEE_CLOSE, rankData.Expand.Branch.Code),
+			Inline: true,
+		})
+	}
+
+	_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		Embeds:     &[]*discordgo.MessageEmbed{commands_utils.CreateBaseEmbed(title, description, r.BotEnv, fields)},
+		Components: &components,
+	})
+	if err != nil {
+		log.Printf("Error updating message with analyze data: %v", err)
+	}
+}
+
+func (r *RankCommand) HandleAnalyzePagination(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	customID := i.MessageComponentData().CustomID
+
+	var parts []string
+
+	if strings.HasPrefix(customID, "anext_") {
+		parts = strings.Split(customID, "_")
+	} else if strings.HasPrefix(customID, "aprev_") {
+		parts = strings.Split(customID, "_")
+	} else {
+		log.Printf("Invalid analyze pagination customID: %v", customID)
+		return
+	}
+
+	// Format: anext_{rank}_{ciwg}_{deviation}_{branchCode}_{page} or aprev_{rank}_{ciwg}_{deviation}_{branchCode}_{page}
+	if len(parts) != 6 {
+		log.Printf("Invalid analyze pagination customID format: %v", customID)
+		return
+	}
+
+	rank := parts[1]
+	ciwg := parts[2]
+	deviation := parts[3]
+	branchCode := parts[4]
+	pageStr := parts[5]
+
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		log.Printf("Error converting page to int: %v", err)
+		return
+	}
+
+	branchID, err := strconv.Atoi(branchCode)
+	if err != nil {
+		log.Printf("Error converting branch code to int: %v", err)
+		return
+	}
+
+	branchData := AnalyzeBranch[branchID]
+	ciwgBool := (ciwg == "true")
+
+	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredMessageUpdate,
+	})
+	if err != nil {
+		log.Printf("Error acknowledging pagination: %v", err)
+		return
+	}
+
+	matchingRankChunks, err := r.findMatchingRanks(rank, deviation, branchData, ciwgBool)
+	if err != nil {
+		log.Printf("Error fetching matching data for pagination: %v", err)
+		return
+	}
+
+	r.displayAnalyzePage(s, i, matchingRankChunks, page, branchData, ciwgBool, rank, ciwg, deviation, branchCode)
+}

@@ -170,10 +170,8 @@ var (
 			checkChannel(s, i)
 			switch i.Type {
 			case discordgo.InteractionApplicationCommand:
-				log.Println("Handling Cutoff Response")
 				RankCommand.HandleRankCutoffResponse(s, i)
 			case discordgo.InteractionApplicationCommandAutocomplete:
-				log.Println("Handling Cutoff Autocomplete")
 				RankCommand.HandleRankCutoffAutocomplete(s, i)
 			}
 		},

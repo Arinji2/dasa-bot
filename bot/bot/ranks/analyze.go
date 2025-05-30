@@ -3,6 +3,7 @@ package rank
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	bot_utils "github.com/arinji2/dasa-bot/bot/utils"
 	"github.com/bwmarrin/discordgo"
@@ -17,10 +18,10 @@ func (r *RankCommand) HandleAnalyzeResponse(s *discordgo.Session, i *discordgo.I
 			return
 		}
 
-		// if strings.HasPrefix(customID, "select_analyze_branch") {
-		// 	r.handleAnalyzeBranchSelection(s, i)
-		// 	return
-		// }
+		if strings.HasPrefix(customID, "select_analyze_branch") {
+			r.handleAnalyzeSelection(s, i)
+			return
+		}
 	}
 
 	data := i.ApplicationCommandData()

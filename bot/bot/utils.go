@@ -95,6 +95,8 @@ func (b *Bot) registerCommands() []*discordgo.ApplicationCommand {
 				RankCommand.HandleRankCutoffResponse(s, i)
 			} else if strings.HasPrefix(i.MessageComponentData().CustomID, "select_analyze_branch") {
 				RankCommand.HandleAnalyzeResponse(s, i)
+			} else if strings.HasPrefix(i.MessageComponentData().CustomID, "anext_") || strings.HasPrefix(i.MessageComponentData().CustomID, "aprev_") {
+				RankCommand.HandleAnalyzePagination(s, i)
 			}
 		case discordgo.InteractionApplicationCommandAutocomplete:
 			if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {

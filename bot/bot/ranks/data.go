@@ -2,6 +2,9 @@ package rank
 
 import (
 	"errors"
+	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/arinji2/dasa-bot/pb"
@@ -64,4 +67,116 @@ func (r *RankCommand) specificRank(collegeID, branchCode string, ciwg bool, year
 		return rank, errors.New("no rank found for the selected criteria")
 	}
 	return rank, nil
+}
+
+func (r *RankCommand) findMatchingRanks(rankStr, deviationStr, branchData string, ciwg bool) ([][]pb.RankCollection, error) {
+	inputRank, err := strconv.Atoi(rankStr)
+	if err != nil {
+		return nil, errors.New("invalid rank value")
+	}
+
+	deviationPercent, err := strconv.Atoi(deviationStr)
+	if err != nil {
+		return nil, errors.New("invalid deviation percentage")
+	}
+
+	lowerBound := inputRank - (inputRank * deviationPercent / 100)
+
+	collegeSet := make(map[string]struct{})
+	collegeToRank := make(map[string]pb.RankCollection)
+
+	branchKeywordsList := []string{}
+
+	if strings.Contains(branchData, ":") {
+		branchKeywords := strings.Split(branchData, ":")[1]
+		keywords := strings.Split(branchKeywords, ",")
+		for _, k := range keywords {
+			branchKeywordsList = append(branchKeywordsList, strings.TrimSpace(k))
+		}
+	} else {
+		branchKeywordsList = append(branchKeywordsList, strings.TrimSpace(branchData))
+	}
+
+	type keywordRegex struct {
+		raw    string
+		regexp *regexp.Regexp
+	}
+
+	var compiledKeywords []keywordRegex
+	for _, k := range branchKeywordsList {
+		trimmed := strings.TrimSpace(strings.ToLower(k))
+		pattern := `\b` + regexp.QuoteMeta(trimmed) + `\b`
+		compiledKeywords = append(compiledKeywords, keywordRegex{
+			raw:    trimmed,
+			regexp: regexp.MustCompile(pattern),
+		})
+	}
+
+	latestYear := r.RankData[len(r.RankData)-1].Year
+	for _, v := range r.RankData {
+		if v.Expand.Branch.Ciwg != ciwg {
+			continue
+		}
+
+		if v.Year != latestYear {
+			continue
+		}
+
+		match := false
+		branchName := strings.ToLower(v.Expand.Branch.Name)
+		branchCode := strings.ToLower(v.Expand.Branch.Code)
+
+		for _, keyword := range compiledKeywords {
+			if keyword.regexp.MatchString(branchName) || keyword.regexp.MatchString(branchCode) {
+				match = true
+				break
+			}
+		}
+		if !match {
+			continue
+		}
+
+		openRank := v.JEE_OPEN
+		closeRank := v.JEE_CLOSE
+
+		if openRank == 0 && closeRank == 0 {
+			continue
+		}
+
+		if closeRank >= lowerBound {
+			if _, exists := collegeSet[v.College]; !exists {
+				collegeSet[v.College] = struct{}{}
+				collegeToRank[v.College] = v
+			}
+		}
+	}
+
+	if len(collegeToRank) == 0 {
+		return nil, errors.New("no ranks matched the given criteria")
+	}
+
+	var sortedRanks []pb.RankCollection
+	for _, rank := range collegeToRank {
+		sortedRanks = append(sortedRanks, rank)
+	}
+
+	sort.Slice(sortedRanks, func(i, j int) bool {
+		return sortedRanks[i].JEE_CLOSE < sortedRanks[j].JEE_CLOSE
+	})
+
+	var chunks [][]pb.RankCollection
+	currentChunk := []pb.RankCollection{}
+
+	for _, rank := range sortedRanks {
+		currentChunk = append(currentChunk, rank)
+		if len(currentChunk) == 10 {
+			chunks = append(chunks, currentChunk)
+			currentChunk = []pb.RankCollection{}
+		}
+	}
+	if len(currentChunk) > 0 {
+		chunks = append(chunks, currentChunk)
+	}
+
+	return chunks, nil
 }
