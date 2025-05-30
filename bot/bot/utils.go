@@ -93,8 +93,9 @@ func (b *Bot) registerCommands() []*discordgo.ApplicationCommand {
 				bot_utils.HandleSendToDMButton(s, i)
 			} else if strings.HasPrefix(i.MessageComponentData().CustomID, "select_branch_") {
 				RankCommand.HandleRankCutoffResponse(s, i)
+			} else if strings.HasPrefix(i.MessageComponentData().CustomID, "select_analyze_branch") {
+				RankCommand.HandleAnalyzeResponse(s, i)
 			}
-			// TODO: Add Analuze Branch Select Case
 		case discordgo.InteractionApplicationCommandAutocomplete:
 			if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
 				h(s, i)
