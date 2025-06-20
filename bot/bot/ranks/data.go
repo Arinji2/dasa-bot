@@ -82,7 +82,7 @@ func (r *RankCommand) findMatchingRanks(rankStr, deviationStr, branchData string
 
 	lowerBound := inputRank - (inputRank * deviationPercent / 100)
 
-	collegeToRank := make(map[string]pb.RankCollection)
+	var collegeToRank []pb.RankCollection
 
 	branchKeywordsList := []string{}
 
@@ -121,6 +121,10 @@ func (r *RankCommand) findMatchingRanks(rankStr, deviationStr, branchData string
 			continue
 		}
 
+		if v.Round != 3 {
+			continue
+		}
+
 		match := false
 		branchName := strings.ToLower(v.Expand.Branch.Name)
 		branchCode := strings.ToLower(v.Expand.Branch.Code)
@@ -143,7 +147,7 @@ func (r *RankCommand) findMatchingRanks(rankStr, deviationStr, branchData string
 		}
 
 		if closeRank >= lowerBound {
-			collegeToRank[v.College] = v
+			collegeToRank = append(collegeToRank, v)
 		}
 	}
 
@@ -151,19 +155,14 @@ func (r *RankCommand) findMatchingRanks(rankStr, deviationStr, branchData string
 		return nil, errors.New("no ranks matched the given criteria")
 	}
 
-	var sortedRanks []pb.RankCollection
-	for _, rank := range collegeToRank {
-		sortedRanks = append(sortedRanks, rank)
-	}
-
-	sort.Slice(sortedRanks, func(i, j int) bool {
-		return sortedRanks[i].JEE_CLOSE < sortedRanks[j].JEE_CLOSE
+	sort.Slice(collegeToRank, func(i, j int) bool {
+		return collegeToRank[i].JEE_CLOSE < collegeToRank[j].JEE_CLOSE
 	})
 
 	var chunks [][]pb.RankCollection
 	currentChunk := []pb.RankCollection{}
 
-	for _, rank := range sortedRanks {
+	for _, rank := range collegeToRank {
 		currentChunk = append(currentChunk, rank)
 		if len(currentChunk) == 10 {
 			chunks = append(chunks, currentChunk)
