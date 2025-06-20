@@ -180,10 +180,8 @@ var (
 			checkChannel(s, i)
 			switch i.Type {
 			case discordgo.InteractionApplicationCommand:
-				log.Println("Handling Analyze Response")
 				RankCommand.HandleAnalyzeResponse(s, i)
 			case discordgo.InteractionApplicationCommandAutocomplete:
-				log.Println("Handling Analyze Autocomplete")
 				RankCommand.HandleAnalyzeAutocomplete(s, i)
 			}
 		},
