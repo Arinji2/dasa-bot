@@ -82,7 +82,6 @@ func (r *RankCommand) findMatchingRanks(rankStr, deviationStr, branchData string
 
 	lowerBound := inputRank - (inputRank * deviationPercent / 100)
 
-	collegeSet := make(map[string]struct{})
 	collegeToRank := make(map[string]pb.RankCollection)
 
 	branchKeywordsList := []string{}
@@ -144,10 +143,7 @@ func (r *RankCommand) findMatchingRanks(rankStr, deviationStr, branchData string
 		}
 
 		if closeRank >= lowerBound {
-			if _, exists := collegeSet[v.College]; !exists {
-				collegeSet[v.College] = struct{}{}
-				collegeToRank[v.College] = v
-			}
+			collegeToRank[v.College] = v
 		}
 	}
 
