@@ -1,3 +1,4 @@
+// Package rank contains the logic for the Rank and Analyze commands
 package rank
 
 import (
