@@ -73,11 +73,16 @@ func refreshData(botEnv *env.Bot) {
 	log.Printf("Found %d ranks", len(locRankData))
 
 	RankCommand.CollegeData = locCollegeData
+	InsertCommand.CollegeData = locCollegeData
 
 	RankCommand.RankData = locRankData
+	InsertCommand.RankData = locRankData
+
 	RankCommand.PbAdmin = *PbAdmin
+	InsertCommand.PbAdmin = *PbAdmin
 	if botEnv != nil {
 		RankCommand.BotEnv = *botEnv
+		InsertCommand.BotEnv = *botEnv
 	}
 }
 
