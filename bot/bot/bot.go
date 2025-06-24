@@ -1,3 +1,4 @@
+// Package bot contains the main bot logic
 package bot
 
 import (
@@ -8,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/arinji2/dasa-bot/bot/insert"
 	rank "github.com/arinji2/dasa-bot/bot/ranks"
 	"github.com/arinji2/dasa-bot/env"
 	"github.com/arinji2/dasa-bot/pb"
@@ -22,9 +24,10 @@ type Bot struct {
 }
 
 var (
-	PbAdmin     *pb.PocketbaseAdmin
-	RankCommand rank.RankCommand
-	ModRole     []string
+	PbAdmin       *pb.PocketbaseAdmin
+	RankCommand   rank.RankCommand
+	InsertCommand insert.InsertCommand
+	ModRole       []string
 )
 
 func NewBot(bot env.Bot) (*Bot, error) {
@@ -146,6 +149,36 @@ var (
 				},
 			},
 		},
+		{
+			Name:        "insert",
+			Description: "Inserts rank data based on inserted PDF with year and round",
+			Type:        discordgo.ChatApplicationCommand,
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Name:         "file",
+					Description:  "CSV file of ranks",
+					Type:         discordgo.ApplicationCommandOptionAttachment,
+					Required:     true,
+					Autocomplete: false,
+				},
+
+				{
+					Name:         "year",
+					Description:  "Year of the ranks",
+					Type:         discordgo.ApplicationCommandOptionString,
+					Required:     true,
+					Autocomplete: false,
+				},
+
+				{
+					Name:         "round",
+					Description:  "Round of the ranks",
+					Type:         discordgo.ApplicationCommandOptionString,
+					Required:     true,
+					Autocomplete: false,
+				},
+			},
+		},
 	}
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -183,6 +216,15 @@ var (
 				RankCommand.HandleAnalyzeResponse(s, i)
 			case discordgo.InteractionApplicationCommandAutocomplete:
 				RankCommand.HandleAnalyzeAutocomplete(s, i)
+			}
+		},
+
+		"insert": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			switch i.Type {
+			case discordgo.InteractionApplicationCommand:
+
+				refreshData(&InsertCommand.BotEnv)
+				InsertCommand.HandleInsertResponse(s, i)
 			}
 		},
 	}
