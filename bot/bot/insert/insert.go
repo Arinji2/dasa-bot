@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	commands_utils "github.com/arinji2/dasa-bot/commands"
 	"github.com/arinji2/dasa-bot/env"
@@ -31,6 +32,7 @@ func (c *InsertCommand) HandleInsertResponse(s *discordgo.Session, i *discordgo.
 }
 
 func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.InteractionCreate, data *discordgo.ApplicationCommandInteractionData) {
+	var logs []string
 	year := data.Options[1].StringValue()
 
 	yearInt, err := strconv.Atoi(year)
@@ -55,11 +57,13 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 	res, err := http.DefaultClient.Get(attachmentURL)
 	if err != nil {
 		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error getting file", err.Error(), nil)
+		return
 	}
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error reading file", err.Error(), nil)
+		return
 	}
 
 	reader := bytes.NewReader(body)
@@ -67,16 +71,37 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 	_, err = csvReader.Read()
 	if err != nil {
 		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error: Could not read header from file", err.Error(), nil)
+		return
 	}
 
 	userName := i.Member.User.Username
-	err = c.PbAdmin.CreateBackup(userName)
+	backupList, err := c.PbAdmin.ListBackups()
+	if err != nil {
+		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error listing backup", err.Error(), nil)
+		return
+	}
+
+	logs = append(logs, fmt.Sprintf("Found **%d** backups", len(backupList)))
+	if len(backupList) > 3 {
+		logs = append(logs, fmt.Sprintf("Reached limit of 3, deleting backup of key **%s**", backupList[0].Key))
+		err = c.PbAdmin.DeleteBackup(backupList[0].Key)
+		if err != nil {
+			commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error deleting backup", err.Error(), nil)
+			return
+		}
+	}
+	backupName, err := c.PbAdmin.CreateBackup(userName)
 	if err != nil {
 		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error creating backup", err.Error(), nil)
+		return
 	}
+
+	logs = append(logs, fmt.Sprintf("Created backup with name **%s**", backupName))
+
 	parsedRanks, parsedErrs, err := c.parseRankingData(csvReader, yearInt, roundInt)
 	if err != nil {
 		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error parsing data", err.Error(), nil)
+		return
 	}
 
 	if len(parsedErrs) > 0 {
@@ -93,9 +118,96 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 		}
 
 		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error with parsing data", description, nil)
+		return
 	}
 
-	log.Println(len(parsedRanks))
+	// Replace the existing rank creation section with this code
+
+	logs = append(logs, fmt.Sprintf("Parsed **%d** ranks", len(parsedRanks)))
+
+	var wg sync.WaitGroup
+	type RankCreateError struct {
+		Rank pb.RankCollection
+		Err  error
+	}
+
+	errorChan := make(chan RankCreateError, len(parsedRanks))
+
+	// Create a buffered channel to limit concurrent goroutines to 10
+	semaphore := make(chan struct{}, 10)
+
+	skipped := 0
+	var skippedMutex sync.Mutex
+
+	for _, rank := range parsedRanks {
+		wg.Add(1)
+		go func(rank pb.RankCollection) {
+			defer wg.Done()
+
+			// Acquire semaphore (blocks if 10 goroutines are already running)
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }() // Release semaphore when done
+
+			_, exists, err := c.PbAdmin.CreateRank(pb.RankCreateRequest{
+				Year:       rank.Year,
+				Round:      rank.Round,
+				JEE_OPEN:   rank.JEE_OPEN,
+				JEE_CLOSE:  rank.JEE_CLOSE,
+				DASA_OPEN:  rank.DASA_OPEN,
+				DASA_CLOSE: rank.DASA_CLOSE,
+				College:    rank.College,
+				Branch:     rank.Branch,
+			}, rank.Expand.Branch.Ciwg)
+
+			if exists {
+				skippedMutex.Lock()
+				skipped++
+				skippedMutex.Unlock()
+			}
+
+			if err != nil && !exists {
+				errorChan <- RankCreateError{
+					Rank: rank,
+					Err:  err,
+				}
+			}
+		}(rank)
+	}
+
+	wg.Wait()
+	close(errorChan)
+
+	var createErrors []RankCreateError
+	for err := range errorChan {
+		createErrors = append(createErrors, err)
+	}
+
+	if len(createErrors) > 0 {
+		var description string
+		if len(createErrors) > 10 {
+			description += fmt.Sprintf("First 10 errors out of %d: \n", len(createErrors))
+		}
+		for i, err := range createErrors {
+			if i > 10 {
+				break
+			}
+			description += fmt.Sprintf("Failed to create rank with Jee Open: %d and College Name %s \n %s \n\n", err.Rank.JEE_OPEN, err.Rank.Expand.College.Name, err.Err.Error())
+		}
+		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error with creating data", description, nil)
+		return
+	}
+
+	logs = append(logs, fmt.Sprintf("Skipped **%d** ranks", skipped))
+	logs = append(logs, fmt.Sprintf("Successfully created **%d** ranks", len(parsedRanks)-skipped))
+
+	fields := []*discordgo.MessageEmbedField{
+		{
+			Name:   "Logs",
+			Value:  strings.Join(logs, "\n"),
+			Inline: true,
+		},
+	}
+	commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Successfully created ranks", fmt.Sprintf("Successfully inserted ranks for Year: %d and Round %d", yearInt, roundInt), fields)
 }
 
 type RankParseError struct {
