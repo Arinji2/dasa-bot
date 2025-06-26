@@ -1,3 +1,5 @@
+// Package pb provides a client for interacting with the Pocketbase API,
+// including authentication and data operations for colleges, branches, and ranks.
 package pb
 
 import (
