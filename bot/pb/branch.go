@@ -73,7 +73,6 @@ func (p *PocketbaseAdmin) CreateBranch(branch BranchCreateRequest) (BranchCollec
 	}
 	parsedURL.Path = "/api/collections/branches/records"
 
-	type request struct{}
 	responseBody, err := network.MakeAuthenticatedRequest(parsedURL, "POST", BranchCreateRequest{
 		Name: branch.Name,
 		Code: branch.Code,
