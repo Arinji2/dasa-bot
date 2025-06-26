@@ -16,7 +16,6 @@ import (
 	"github.com/arinji2/dasa-bot/env"
 	"github.com/arinji2/dasa-bot/pb"
 	"github.com/bwmarrin/discordgo"
-	"github.com/davecgh/go-spew/spew"
 )
 
 type InsertCommand struct {
@@ -71,9 +70,14 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 		log.Fatalf("Error: Could not read header from file: %v", err)
 	}
 
+	userName := i.Member.User.Username
+	err = c.PbAdmin.CreateBackup(userName)
+	if err != nil {
+		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error creating backup", err.Error(), nil)
+	}
 	parsedRanks, parsedErrs, err := c.parseRankingData(csvReader, yearInt, roundInt)
 	if err != nil {
-		log.Fatal(err)
+		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error parsing data", err.Error(), nil)
 	}
 
 	if len(parsedErrs) > 0 {
@@ -88,12 +92,11 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 			// add 1 since we remove the header
 			description += fmt.Sprintf("Line Number: %d \n %s \n\n", (err.Line + 1), err.Message)
 		}
-		fmt.Println(description)
 
 		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error with parsing data", description, nil)
 	}
 
-	spew.Dump(parsedRanks)
+	log.Println(len(parsedRanks))
 }
 
 type RankParseError struct {
@@ -218,13 +221,6 @@ func (c *InsertCommand) parseRankingData(reader *csv.Reader, year, round int) ([
 			}
 		}
 
-		if branchID != "" {
-			fmt.Println("[bot/bot/insert/insert.go:189] branchID = ", branchID)
-		}
-		if collegeID != "" {
-			fmt.Println("[bot/bot/insert/insert.go:191] collegeID = ", collegeID)
-		}
-
 		var collegeData pb.CollegeCollection
 
 		if collegeID != "" {
@@ -280,7 +276,6 @@ func (c *InsertCommand) parseRankingData(reader *csv.Reader, year, round int) ([
 				return v.Name == branchName && v.Code == branchCode && v.Ciwg == isCiWg
 			})
 			if index == -1 {
-				fmt.Printf("Creating branch %v\n", branchName)
 				branchData, err = c.PbAdmin.CreateBranch(pb.BranchCreateRequest{
 					Name: branchName,
 					Code: branchCode,
