@@ -93,7 +93,7 @@ func (p *PocketbaseAdmin) GetAllRanks() ([]RankCollection, error) {
 	return allItems, nil
 }
 
-// Get Rank by Year and Round for a College and Branch
+// GetSpecificRank by Year and Round for a College and Branch
 func (p *PocketbaseAdmin) GetSpecificRank(college string, branch string, year int, round int, ciwg bool) (RankCollection, error) {
 	parsedURL, err := url.Parse(p.BaseDomain)
 	if err != nil {
@@ -122,7 +122,7 @@ func (p *PocketbaseAdmin) GetSpecificRank(college string, branch string, year in
 	return response.Items[0], nil
 }
 
-// Get All Ranks for a College and Branch
+// GetRanksByCollegeBranch for a College and Branch
 func (p *PocketbaseAdmin) GetRanksByCollegeBranch(college string, branch string) ([]RankCollection, error) {
 	parsedURL, err := url.Parse(p.BaseDomain)
 	if err != nil {
@@ -151,7 +151,7 @@ func (p *PocketbaseAdmin) GetRanksByCollegeBranch(college string, branch string)
 	return response.Items, nil
 }
 
-// Get All Ranks for a Year and Round
+// GetRanksByYearAndRound for a Year and Round
 func (p *PocketbaseAdmin) GetRanksByYearAndRound(year int, round int) ([]RankCollection, error) {
 	parsedURL, err := url.Parse(p.BaseDomain)
 	if err != nil {
