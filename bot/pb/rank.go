@@ -119,6 +119,41 @@ func (p *PocketbaseAdmin) GetSpecificRank(college string, branch string, year in
 		return RankCollection{}, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
+	if len(response.Items) == 0 {
+		return RankCollection{}, fmt.Errorf("no rank found for year: %d, round: %d, college: %s, branch: %s", year, round, college, branch)
+	}
+
+	return response.Items[0], nil
+}
+
+func (p *PocketbaseAdmin) GetSpecificRankWithBranchID(college string, branch string, year int, round int, ciwg bool) (RankCollection, error) {
+	parsedURL, err := url.Parse(p.BaseDomain)
+	if err != nil {
+		return RankCollection{}, fmt.Errorf("failed to parse base domain: %w", err)
+	}
+	parsedURL.Path = "/api/collections/ranks/records"
+
+	params := url.Values{}
+	params.Add("filter", fmt.Sprintf("year='%d' && round='%d' && college.id='%s' && branch.id='%s' && branch.ciwg=%t", year, round, college, branch, ciwg))
+
+	parsedURL.RawQuery = params.Encode()
+
+	type request struct{}
+	responseBody, err := network.MakeAuthenticatedRequest(parsedURL, "GET", request{}, p.Token)
+	if err != nil {
+		return RankCollection{}, fmt.Errorf("failed to make authenticated request: %w", err)
+	}
+
+	var response PbResponse[RankCollection]
+	err = json.Unmarshal(responseBody, &response)
+	if err != nil {
+		return RankCollection{}, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	if len(response.Items) == 0 {
+		return RankCollection{}, fmt.Errorf("no rank found for year: %d, round: %d, college: %s, branch: %s", year, round, college, branch)
+	}
+
 	return response.Items[0], nil
 }
 
@@ -178,4 +213,34 @@ func (p *PocketbaseAdmin) GetRanksByYearAndRound(year int, round int) ([]RankCol
 	}
 
 	return response.Items, nil
+}
+
+func (p *PocketbaseAdmin) CreateRank(rank RankCreateRequest, ciwg bool) (RankCollection, bool, error) {
+	_, err := p.GetSpecificRankWithBranchID(rank.College, rank.Branch, rank.Year, rank.Round, ciwg)
+	if err == nil {
+		return RankCollection{}, true, fmt.Errorf("rank already exists")
+	}
+	parsedURL, err := url.Parse(p.BaseDomain)
+	if err != nil {
+		return RankCollection{}, false, fmt.Errorf("failed to parse base domain: %w", err)
+	}
+	parsedURL.Path = "/api/collections/ranks/records"
+
+	params := url.Values{}
+	params.Add("expand", "college,branch")
+
+	parsedURL.RawQuery = params.Encode()
+
+	responseBody, err := network.MakeAuthenticatedRequest(parsedURL, "POST", rank, p.Token)
+	if err != nil {
+		return RankCollection{}, false, err
+	}
+
+	var response RankCollection
+	err = json.Unmarshal(responseBody, &response)
+	if err != nil {
+		return RankCollection{}, false, err
+	}
+
+	return response, false, nil
 }
