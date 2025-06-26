@@ -303,6 +303,8 @@ func (c *InsertCommand) parseRankingData(reader *csv.Reader, year, round int) ([
 			JEE_CLOSE: lastRank,
 			Year:      year,
 			Round:     round,
+			College:   collegeData.ID,
+			Branch:    branchData.ID,
 			Expand: struct {
 				College pb.CollegeCollection "json:\"college\""
 				Branch  pb.BranchCollection  "json:\"branch\""
