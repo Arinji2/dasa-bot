@@ -72,6 +72,15 @@ func refreshData(botEnv *env.Bot) {
 	}
 	log.Printf("Found %d ranks", len(locRankData))
 
+	locBranchData, err := PbAdmin.GetAllBranches()
+	if err != nil {
+		log.Panicf("Cannot get branches: %v", err)
+		locBranchData = make([]pb.BranchCollection, 0)
+	}
+	log.Printf("Found %d branches", len(locBranchData))
+
+	InsertCommand.BranchData = locBranchData
+
 	RankCommand.CollegeData = locCollegeData
 	InsertCommand.CollegeData = locCollegeData
 

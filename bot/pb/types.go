@@ -44,3 +44,9 @@ type RankCollection struct {
 		Branch  BranchCollection  `json:"branch"`
 	} `json:"expand"`
 }
+
+type BranchCreateRequest struct {
+	Name string `json:"name"`
+	Code string `json:"code"`
+	Ciwg bool   `json:"ciwg"`
+}

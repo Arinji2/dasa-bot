@@ -21,6 +21,7 @@ import (
 
 type InsertCommand struct {
 	RankData    []pb.RankCollection
+	BranchData  []pb.BranchCollection
 	CollegeData []pb.CollegeCollection
 	PbAdmin     pb.PocketbaseAdmin
 	BotEnv      env.Bot
@@ -261,8 +262,8 @@ func (c *InsertCommand) parseRankingData(reader *csv.Reader, year, round int) ([
 
 		var branchData pb.BranchCollection
 		if branchID != "" {
-			index := slices.IndexFunc(c.RankData, func(v pb.RankCollection) bool {
-				return v.Branch == branchID && v.College == collegeData.ID && v.Expand.Branch.Ciwg == isCiWg
+			index := slices.IndexFunc(c.BranchData, func(v pb.BranchCollection) bool {
+				return branchID == v.ID
 			})
 			if index == -1 {
 				errors = append(errors, RankParseError{
@@ -272,22 +273,31 @@ func (c *InsertCommand) parseRankingData(reader *csv.Reader, year, round int) ([
 				})
 				continue
 			} else {
-				branchData = c.RankData[index].Expand.Branch
+				branchData = c.BranchData[index]
 			}
 		} else {
-			index := slices.IndexFunc(c.RankData, func(v pb.RankCollection) bool {
-				return v.Expand.Branch.Code == branchCode && v.College == collegeData.ID && v.Expand.Branch.Ciwg == isCiWg
+			index := slices.IndexFunc(c.BranchData, func(v pb.BranchCollection) bool {
+				return v.Name == branchName && v.Code == branchCode && v.Ciwg == isCiWg
 			})
 			if index == -1 {
-				// Create the branch instead of erroring out
-				errors = append(errors, RankParseError{
-					Line:    lineNumber,
-					Record:  record,
-					Message: fmt.Sprintf("Branch of code **%v** dosent exist. Try adding the branch id with b-(branchID) as a 6th argument", branchCode),
+				fmt.Printf("Creating branch %v\n", branchName)
+				branchData, err = c.PbAdmin.CreateBranch(pb.BranchCreateRequest{
+					Name: branchName,
+					Code: branchCode,
+					Ciwg: isCiWg,
 				})
-				continue
+
+				c.BranchData = append(c.BranchData, branchData)
+				if err != nil {
+					errors = append(errors, RankParseError{
+						Line:    lineNumber,
+						Record:  record,
+						Message: fmt.Sprintf("Error creating branch: %v", err),
+					})
+					continue
+				}
 			} else {
-				branchData = c.RankData[index].Expand.Branch
+				branchData = c.BranchData[index]
 			}
 		}
 

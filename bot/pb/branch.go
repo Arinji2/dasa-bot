@@ -65,3 +65,29 @@ func (p *PocketbaseAdmin) GetBranchByCode(code string) (BranchCollection, error)
 
 	return response.Items[0], nil
 }
+
+func (p *PocketbaseAdmin) CreateBranch(branch BranchCreateRequest) (BranchCollection, error) {
+	parsedURL, err := url.Parse(p.BaseDomain)
+	if err != nil {
+		return BranchCollection{}, err
+	}
+	parsedURL.Path = "/api/collections/branches/records"
+
+	type request struct{}
+	responseBody, err := network.MakeAuthenticatedRequest(parsedURL, "POST", BranchCreateRequest{
+		Name: branch.Name,
+		Code: branch.Code,
+		Ciwg: branch.Ciwg,
+	}, p.Token)
+	if err != nil {
+		return BranchCollection{}, err
+	}
+
+	var response BranchCollection
+	err = json.Unmarshal(responseBody, &response)
+	if err != nil {
+		return BranchCollection{}, err
+	}
+
+	return response, nil
+}
