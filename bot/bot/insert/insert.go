@@ -54,19 +54,19 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 	// get the file contents
 	res, err := http.DefaultClient.Get(attachmentURL)
 	if err != nil {
-		log.Fatal(err)
+		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error getting file", err.Error(), nil)
 	}
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error reading file", err.Error(), nil)
 	}
 
 	reader := bytes.NewReader(body)
 	csvReader := csv.NewReader(reader)
 	_, err = csvReader.Read()
 	if err != nil {
-		log.Fatalf("Error: Could not read header from file: %v", err)
+		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error: Could not read header from file", err.Error(), nil)
 	}
 
 	userName := i.Member.User.Username
