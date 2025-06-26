@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -109,6 +108,22 @@ func (c *InsertCommand) parseRankingData(reader *csv.Reader, year, round int) ([
 	var ranks []pb.RankCollection
 	var errors []RankParseError
 	lineNumber := 0
+
+	collegeIDMap := make(map[string]pb.CollegeCollection, len(c.CollegeData))
+	collegeNameMap := make(map[string]pb.CollegeCollection, len(c.CollegeData))
+	for _, college := range c.CollegeData {
+		collegeIDMap[college.ID] = college
+		normalizedName := strings.ToLower(strings.ReplaceAll(college.Name, ",", ""))
+		collegeNameMap[normalizedName] = college
+	}
+
+	branchIDMap := make(map[string]pb.BranchCollection, len(c.BranchData))
+	branchKeyMap := make(map[string]pb.BranchCollection, len(c.BranchData))
+	for _, branch := range c.BranchData {
+		branchIDMap[branch.ID] = branch
+		key := fmt.Sprintf("%s-%s-%t", strings.ToLower(branch.Name), strings.ToLower(branch.Code), branch.Ciwg)
+		branchKeyMap[key] = branch
+	}
 
 	for {
 		record, err := reader.Read()
@@ -222,60 +237,46 @@ func (c *InsertCommand) parseRankingData(reader *csv.Reader, year, round int) ([
 		}
 
 		var collegeData pb.CollegeCollection
+		var found bool
 
 		if collegeID != "" {
-			index := slices.IndexFunc(c.CollegeData, func(v pb.CollegeCollection) bool {
-				return v.ID == collegeID
-			})
-			if index == -1 {
+			collegeData, found = collegeIDMap[collegeID]
+			if !found {
 				errors = append(errors, RankParseError{
 					Line:    lineNumber,
 					Record:  record,
 					Message: fmt.Sprintf("Invalid 'college_id' value: %v", collegeID),
 				})
 				continue
-			} else {
-				collegeData = c.CollegeData[index]
 			}
 		} else {
-			index := slices.IndexFunc(c.CollegeData, func(v pb.CollegeCollection) bool {
-				cleanedCollegeName := strings.ReplaceAll(collegeName, ",", "")
-				cleanedv2 := strings.ReplaceAll(v.Name, ",", "")
-
-				return strings.EqualFold(cleanedCollegeName, cleanedv2)
-			})
-			if index == -1 {
+			normalizedName := strings.ToLower(strings.ReplaceAll(collegeName, ",", ""))
+			collegeData, found = collegeNameMap[normalizedName]
+			if !found {
 				errors = append(errors, RankParseError{
 					Line:    lineNumber,
 					Record:  record,
 					Message: fmt.Sprintf("College of name **%v** dosent exist. Try adding the college id with c-(collegeID) as a 6th argument", collegeName),
 				})
 				continue
-			} else {
-				collegeData = c.CollegeData[index]
 			}
 		}
 
 		var branchData pb.BranchCollection
 		if branchID != "" {
-			index := slices.IndexFunc(c.BranchData, func(v pb.BranchCollection) bool {
-				return branchID == v.ID
-			})
-			if index == -1 {
+			branchData, found = branchIDMap[branchID]
+			if !found {
 				errors = append(errors, RankParseError{
 					Line:    lineNumber,
 					Record:  record,
 					Message: fmt.Sprintf("Invalid 'branch_id' value: %v for 'college id' %v", branchID, collegeData.ID),
 				})
 				continue
-			} else {
-				branchData = c.BranchData[index]
 			}
 		} else {
-			index := slices.IndexFunc(c.BranchData, func(v pb.BranchCollection) bool {
-				return v.Name == branchName && v.Code == branchCode && v.Ciwg == isCiWg
-			})
-			if index == -1 {
+			key := fmt.Sprintf("%s-%s-%t", strings.ToLower(branchName), strings.ToLower(branchCode), isCiWg)
+			branchData, found = branchKeyMap[key]
+			if !found {
 				branchData, err = c.PbAdmin.CreateBranch(pb.BranchCreateRequest{
 					Name: branchName,
 					Code: branchCode,
@@ -291,8 +292,9 @@ func (c *InsertCommand) parseRankingData(reader *csv.Reader, year, round int) ([
 					})
 					continue
 				}
-			} else {
-				branchData = c.BranchData[index]
+				// add new branch to map
+				branchIDMap[branchData.ID] = branchData
+				branchKeyMap[key] = branchData
 			}
 		}
 
