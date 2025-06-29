@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	botFooter  = "Dasa Bot"
+	botFooter  = "Dasa Bot \nMade by Arinji :D"
 	embedColor = 0xA000FF
 )
 
