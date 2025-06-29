@@ -226,8 +226,11 @@ var (
 		"insert": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			switch i.Type {
 			case discordgo.InteractionApplicationCommand:
-
 				err := checkChannel(s, i, true)
+				if err != nil {
+					return
+				}
+				err = checkPermissions(s, i)
 				if err != nil {
 					return
 				}
