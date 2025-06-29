@@ -56,13 +56,13 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 	// get the file contents
 	res, err := http.DefaultClient.Get(attachmentURL)
 	if err != nil {
-		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error getting file", err.Error(), nil)
+		commands_utils.RespondWithEmbed(s, i, c.BotEnv, "Error getting file", err.Error(), nil)
 		return
 	}
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error reading file", err.Error(), nil)
+		commands_utils.RespondWithEmbed(s, i, c.BotEnv, "Error reading file", err.Error(), nil)
 		return
 	}
 
@@ -70,14 +70,14 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 	csvReader := csv.NewReader(reader)
 	_, err = csvReader.Read()
 	if err != nil {
-		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error: Could not read header from file", err.Error(), nil)
+		commands_utils.RespondWithEmbed(s, i, c.BotEnv, "Error: Could not read header from file", err.Error(), nil)
 		return
 	}
 
 	userName := i.Member.User.Username
 	backupList, err := c.PbAdmin.ListBackups()
 	if err != nil {
-		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error listing backup", err.Error(), nil)
+		commands_utils.RespondWithEmbed(s, i, c.BotEnv, "Error listing backup", err.Error(), nil)
 		return
 	}
 
@@ -86,13 +86,13 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 		logs = append(logs, fmt.Sprintf("Reached limit of 3, deleting backup of key **%s**", backupList[0].Key))
 		err = c.PbAdmin.DeleteBackup(backupList[0].Key)
 		if err != nil {
-			commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error deleting backup", err.Error(), nil)
+			commands_utils.RespondWithEmbed(s, i, c.BotEnv, "Error deleting backup", err.Error(), nil)
 			return
 		}
 	}
 	backupName, err := c.PbAdmin.CreateBackup(userName)
 	if err != nil {
-		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error creating backup", err.Error(), nil)
+		commands_utils.RespondWithEmbed(s, i, c.BotEnv, "Error creating backup", err.Error(), nil)
 		return
 	}
 
@@ -100,7 +100,7 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 
 	parsedRanks, parsedErrs, err := c.parseRankingData(csvReader, yearInt, roundInt)
 	if err != nil {
-		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error parsing data", err.Error(), nil)
+		commands_utils.RespondWithEmbed(s, i, c.BotEnv, "Error parsing data", err.Error(), nil)
 		return
 	}
 
@@ -117,7 +117,7 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 			description += fmt.Sprintf("Line Number: %d \n %s \n\n", (err.Line + 1), err.Message)
 		}
 
-		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error with parsing data", description, nil)
+		commands_utils.RespondWithEmbed(s, i, c.BotEnv, "Error with parsing data", description, nil)
 		return
 	}
 
@@ -193,7 +193,7 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 			}
 			description += fmt.Sprintf("Failed to create rank with Jee Open: %d and College Name %s \n %s \n\n", err.Rank.JEE_OPEN, err.Rank.Expand.College.Name, err.Err.Error())
 		}
-		commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Error with creating data", description, nil)
+		commands_utils.RespondWithEmbed(s, i, c.BotEnv, "Error with creating data", description, nil)
 		return
 	}
 
@@ -207,7 +207,7 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 			Inline: true,
 		},
 	}
-	commands_utils.RespondWithEphermalEmbed(s, i, c.BotEnv, "Successfully created ranks", fmt.Sprintf("Successfully inserted ranks for Year: %d and Round %d", yearInt, roundInt), fields)
+	commands_utils.RespondWithEmbed(s, i, c.BotEnv, "Successfully created ranks", fmt.Sprintf("Successfully inserted ranks for Year: %d and Round %d", yearInt, roundInt), fields)
 }
 
 type RankParseError struct {
