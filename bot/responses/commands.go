@@ -1,5 +1,5 @@
-// Package commands_utils contains utility functions for responding to commands and interactions
-package commands_utils
+// Package responses contains utility functions for responding to commands and interactions
+package responses
 
 import (
 	"github.com/arinji2/dasa-bot/env"

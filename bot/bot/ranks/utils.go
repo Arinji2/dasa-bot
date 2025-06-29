@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"strings"
 
-	commands_utils "github.com/arinji2/dasa-bot/commands"
 	"github.com/arinji2/dasa-bot/pb"
+	responses "github.com/arinji2/dasa-bot/responses"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -36,14 +36,14 @@ func (r *RankCommand) showBranchSelect(s *discordgo.Session, i *discordgo.Intera
 	yearInt, err := strconv.Atoi(year)
 	if err != nil {
 		log.Printf("Error converting year to int: %v", err)
-		commands_utils.RespondWithEphemeralError(s, i, "Invalid year format")
+		responses.RespondWithEphemeralError(s, i, "Invalid year format")
 		return
 	}
 
 	roundInt, err := strconv.Atoi(round)
 	if err != nil {
 		log.Printf("Error converting round to int: %v", err)
-		commands_utils.RespondWithEphemeralError(s, i, "Invalid round format")
+		responses.RespondWithEphemeralError(s, i, "Invalid round format")
 		return
 	}
 
@@ -52,13 +52,13 @@ func (r *RankCommand) showBranchSelect(s *discordgo.Session, i *discordgo.Intera
 	collegeData, err := r.getCollegeData(collegeID)
 	if err != nil {
 		log.Printf("Error fetching college data: %v", err)
-		commands_utils.RespondWithEphemeralError(s, i, "Could not retrieve college data")
+		responses.RespondWithEphemeralError(s, i, "Could not retrieve college data")
 		return
 	}
 
 	branches := r.branchesForCollege(collegeData.ID, ciwgBool, yearInt, roundInt)
 	if len(branches) == 0 {
-		commands_utils.RespondWithEphemeralError(s, i, fmt.Sprintf("No branches found for %s with the selected criteria", collegeData.Name))
+		responses.RespondWithEphemeralError(s, i, fmt.Sprintf("No branches found for %s with the selected criteria", collegeData.Name))
 		return
 	}
 
@@ -107,7 +107,7 @@ func (r *RankCommand) showBranchSelect(s *discordgo.Session, i *discordgo.Intera
 		},
 	}
 
-	err = commands_utils.RespondWithEphemeralEmbedAndComponents(s, i, r.BotEnv, title, description, fields, components)
+	err = responses.RespondWithEphemeralEmbedAndComponents(s, i, r.BotEnv, title, description, fields, components)
 	if err != nil {
 		log.Printf("Error sending branch selection UI: %v", err)
 	}
@@ -156,7 +156,7 @@ func (r *RankCommand) showAnalyzeBranchSelect(s *discordgo.Session, i *discordgo
 		rank,
 		map[bool]string{true: "CIWG", false: "Non-CIWG"}[ciwgBool])
 
-	err := commands_utils.RespondWithEphemeralEmbedAndComponents(s, i, r.BotEnv, title, description, nil, components)
+	err := responses.RespondWithEphemeralEmbedAndComponents(s, i, r.BotEnv, title, description, nil, components)
 	if err != nil {
 		log.Printf("Error sending branch selection UI: %v", err)
 	}
@@ -171,14 +171,14 @@ func (r *RankCommand) handleCollegeBranches(s *discordgo.Session, i *discordgo.I
 	yearInt, err := strconv.Atoi(year)
 	if err != nil {
 		log.Printf("Error converting year to int: %v", err)
-		commands_utils.RespondWithEphemeralError(s, i, "Invalid year format")
+		responses.RespondWithEphemeralError(s, i, "Invalid year format")
 		return
 	}
 
 	roundInt, err := strconv.Atoi(round)
 	if err != nil {
 		log.Printf("Error converting round to int: %v", err)
-		commands_utils.RespondWithEphemeralError(s, i, "Invalid round format")
+		responses.RespondWithEphemeralError(s, i, "Invalid round format")
 		return
 	}
 
@@ -187,14 +187,14 @@ func (r *RankCommand) handleCollegeBranches(s *discordgo.Session, i *discordgo.I
 	collegeData, err := r.getCollegeData(collegeID)
 	if err != nil {
 		log.Printf("Error fetching college data: %v", err)
-		commands_utils.RespondWithEphemeralError(s, i, "Could not retrieve college data")
+		responses.RespondWithEphemeralError(s, i, "Could not retrieve college data")
 		return
 	}
 
 	branches := r.branchesForCollege(collegeData.ID, ciwgBool, yearInt, roundInt)
 
 	if len(branches) == 0 {
-		commands_utils.RespondWithEphemeralError(s, i, fmt.Sprintf("No branches found for %s with the selected criteria", collegeData.Name))
+		responses.RespondWithEphemeralError(s, i, fmt.Sprintf("No branches found for %s with the selected criteria", collegeData.Name))
 		return
 	}
 
@@ -207,7 +207,7 @@ func (r *RankCommand) handleCollegeBranches(s *discordgo.Session, i *discordgo.I
 
 	rankData, err := r.ranksForCollege(collegeData.ID, ciwgBool, yearInt, roundInt)
 	if err != nil {
-		commands_utils.RespondWithEphemeralError(s, i, fmt.Sprintf("No ranks found for %s with the selected criteria", collegeData.Name))
+		responses.RespondWithEphemeralError(s, i, fmt.Sprintf("No ranks found for %s with the selected criteria", collegeData.Name))
 		return
 	}
 
@@ -241,7 +241,7 @@ func (r *RankCommand) handleCollegeBranches(s *discordgo.Session, i *discordgo.I
 		},
 	}
 
-	err = commands_utils.RespondWithEphemeralEmbedAndComponents(s, i, r.BotEnv, title, description, fields, components)
+	err = responses.RespondWithEphemeralEmbedAndComponents(s, i, r.BotEnv, title, description, fields, components)
 	if err != nil {
 		log.Printf("Error sending branch selection UI: %v", err)
 	}
@@ -352,7 +352,7 @@ func (r *RankCommand) handleBranchSelection(s *discordgo.Session, i *discordgo.I
 	}
 
 	_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Embeds:     &[]*discordgo.MessageEmbed{commands_utils.CreateBaseEmbed(title, description, r.BotEnv, fields)},
+		Embeds:     &[]*discordgo.MessageEmbed{responses.CreateBaseEmbed(title, description, r.BotEnv, fields)},
 		Components: &components,
 	})
 	if err != nil {
@@ -400,7 +400,7 @@ func (r *RankCommand) handleAnalyzeSelection(s *discordgo.Session, i *discordgo.
 	if err != nil {
 		log.Printf("Error fetching matching data: %v", err)
 		s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{commands_utils.CreateBaseEmbed("Could not find ranks", "Could not find any ranks matching your selections.", r.BotEnv, nil)},
+			Embeds: &[]*discordgo.MessageEmbed{responses.CreateBaseEmbed("Could not find ranks", "Could not find any ranks matching your selections.", r.BotEnv, nil)},
 		})
 
 		return
@@ -486,7 +486,7 @@ func (r *RankCommand) displayAnalyzePage(s *discordgo.Session, i *discordgo.Inte
 	}
 
 	_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-		Embeds:     &[]*discordgo.MessageEmbed{commands_utils.CreateBaseEmbed(title, description, r.BotEnv, fields)},
+		Embeds:     &[]*discordgo.MessageEmbed{responses.CreateBaseEmbed(title, description, r.BotEnv, fields)},
 		Components: &components,
 	})
 	if err != nil {
