@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	"log"
 	"slices"
 	"strings"
@@ -20,7 +21,7 @@ func isAdmin(i *discordgo.InteractionCreate) bool {
 	return false
 }
 
-func checkPermissions(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func checkPermissions(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	hasPermission := isAdmin(i)
 	if !hasPermission {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -30,15 +31,12 @@ func checkPermissions(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
+		return fmt.Errorf("you do not have permission to use this command")
 	}
+	return nil
 }
 
-func checkChannel(s *discordgo.Session, i *discordgo.InteractionCreate, isAdminCheck bool) bool {
-	isAdmin := isAdmin(i)
-	if isAdmin {
-		return true
-	}
-
+func checkChannel(s *discordgo.Session, i *discordgo.InteractionCreate, isAdminCheck bool) error {
 	var hasPermission bool
 	if isAdminCheck {
 		hasPermission = AdminChannel == i.ChannelID
@@ -54,9 +52,9 @@ func checkChannel(s *discordgo.Session, i *discordgo.InteractionCreate, isAdminC
 				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
-		return false
+		return fmt.Errorf("you cannot use this command in this channel")
 	}
-	return true
+	return nil
 }
 
 func refreshData(botEnv *env.Bot) {

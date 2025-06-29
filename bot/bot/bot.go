@@ -187,8 +187,10 @@ var (
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"refresh-data": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			checkChannel(s, i)
-			checkPermissions(s, i)
+			err := checkPermissions(s, i)
+			if err != nil {
+				return
+			}
 			switch i.Type {
 			case discordgo.InteractionApplicationCommand:
 				timeStart := time.Now()
@@ -204,7 +206,6 @@ var (
 		},
 
 		"cutoff": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			checkChannel(s, i)
 			switch i.Type {
 			case discordgo.InteractionApplicationCommand:
 				RankCommand.HandleRankCutoffResponse(s, i)
@@ -214,7 +215,6 @@ var (
 		},
 
 		"analyze": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			checkChannel(s, i)
 			switch i.Type {
 			case discordgo.InteractionApplicationCommand:
 				RankCommand.HandleAnalyzeResponse(s, i)
@@ -227,8 +227,11 @@ var (
 			switch i.Type {
 			case discordgo.InteractionApplicationCommand:
 
+				err := checkChannel(s, i, true)
+				if err != nil {
+					return
+				}
 				refreshData(&InsertCommand.BotEnv)
-				checkChannel(s, i)
 				InsertCommand.HandleInsertResponse(s, i)
 			}
 		},
