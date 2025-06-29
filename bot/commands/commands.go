@@ -1,3 +1,4 @@
+// Package commands_utils contains utility functions for responding to commands and interactions
 package commands_utils
 
 import (
@@ -7,7 +8,7 @@ import (
 
 const (
 	botFooter  = "Dasa Bot"
-	embedColor = 0xA000FF // Garconia Red
+	embedColor = 0xA000FF
 )
 
 func CreateBaseEmbed(title string, description string, botEnv env.Bot, fields []*discordgo.MessageEmbedField) *discordgo.MessageEmbed {
@@ -70,6 +71,34 @@ func RespondWithEphemeralEmbedAndComponents(s *discordgo.Session, i *discordgo.I
 			Components: components,
 			Flags:      discordgo.MessageFlagsEphemeral,
 		},
+	})
+}
+
+func RespondWithAutoEmbedAndComponents(
+	s *discordgo.Session,
+	i *discordgo.InteractionCreate,
+	botEnv env.Bot,
+	title, description string,
+	fields []*discordgo.MessageEmbedField,
+	components []discordgo.MessageComponent,
+	BotChannel string,
+) error {
+	isEphemeral := i.ChannelID == BotChannel
+
+	data := &discordgo.InteractionResponseData{
+		Embeds: []*discordgo.MessageEmbed{
+			CreateBaseEmbed(title, description, botEnv, fields),
+		},
+		Components: components,
+	}
+
+	if isEphemeral {
+		data.Flags = discordgo.MessageFlagsEphemeral
+	}
+
+	return s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: data,
 	})
 }
 
