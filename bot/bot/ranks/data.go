@@ -88,8 +88,8 @@ func (r *RankCommand) findMatchingRanks(rankStr, deviationStr, branchData string
 
 	if strings.Contains(branchData, ":") {
 		branchKeywords := strings.Split(branchData, ":")[1]
-		keywords := strings.Split(branchKeywords, ",")
-		for _, k := range keywords {
+		keywords := strings.SplitSeq(branchKeywords, ",")
+		for k := range keywords {
 			branchKeywordsList = append(branchKeywordsList, strings.TrimSpace(k))
 		}
 	} else {
