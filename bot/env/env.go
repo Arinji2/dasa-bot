@@ -8,10 +8,12 @@ import (
 )
 
 type Bot struct {
-	Token     string
-	GuildID   string
-	ModRole   []string
-	Thumbnail string
+	Token        string
+	GuildID      string
+	ModRole      []string
+	Thumbnail    string
+	BotChannel   string
+	AdminChannel string
 }
 
 type PB struct {
@@ -41,14 +43,18 @@ func SetupEnv() *Env {
 	baseDomain := loadEnv("BASE_DOMAIN")
 	modRole := loadEnv("MOD_ROLE")
 	thumbnail := loadEnv("THUMBNAIL")
+	botChannel := loadEnv("BOT_CHANNEL")
+	adminChannel := loadEnv("ADMIN_CHANNEL")
 
 	log.Println("Environment variables loaded.")
 	return &Env{
 		Bot: Bot{
-			Token:     token,
-			GuildID:   guildID,
-			ModRole:   multiEnv(modRole),
-			Thumbnail: thumbnail,
+			Token:        token,
+			GuildID:      guildID,
+			ModRole:      multiEnv(modRole),
+			Thumbnail:    thumbnail,
+			BotChannel:   botChannel,
+			AdminChannel: adminChannel,
 		},
 		PB: PB{
 			Email:      adminEmail,
