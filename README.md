@@ -46,7 +46,9 @@ The `.env` file contains the following variables:
 | ADMIN_PASSWORD | Pocketbase Admin Password |
 | BASE_DOMAIN    | Pocketbase Base Domain    |
 | MOD_ROLE       | Discord Role ID           |
-| ADMIN_CHANNEL  | Discord Channel ID        |
+| THUMBNAIL      | Embed Thumbnail URL       |
+| ADMIN_CHANNEL  | Discord Admin Channel ID  |
+| BOT_CHANNEL    | Discord Bot Channel ID    |
 
 All of the values are required to run the bot.
 
