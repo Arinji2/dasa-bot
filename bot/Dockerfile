@@ -1,5 +1,5 @@
 # Use the official Go image as a build stage
-FROM golang:1.23.5-alpine AS builder
+FROM golang:1.24.1-alpine AS builder
 
 # Add a label to the Repo
 LABEL org.opencontainers.image.source="https://github.com/Arinji2/dasa-bot"
