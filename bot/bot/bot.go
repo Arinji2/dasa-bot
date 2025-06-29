@@ -28,6 +28,8 @@ var (
 	RankCommand   rank.RankCommand
 	InsertCommand insert.InsertCommand
 	ModRole       []string
+	BotChannel    string
+	AdminChannel  string
 )
 
 func NewBot(bot env.Bot) (*Bot, error) {
@@ -37,6 +39,8 @@ func NewBot(bot env.Bot) (*Bot, error) {
 		log.Fatalf("Invalid token: %v", err)
 	}
 	ModRole = bot.ModRole
+	BotChannel = bot.BotChannel
+	AdminChannel = bot.AdminChannel
 	return &Bot{Session: s, GuildID: bot.GuildID, BotEnv: bot}, nil
 }
 
@@ -224,6 +228,7 @@ var (
 			case discordgo.InteractionApplicationCommand:
 
 				refreshData(&InsertCommand.BotEnv)
+				checkChannel(s, i)
 				InsertCommand.HandleInsertResponse(s, i)
 			}
 		},
