@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	bot_utils "github.com/arinji2/dasa-bot/bot/utils"
+	buttons "github.com/arinji2/dasa-bot/bot/buttons"
 	"github.com/arinji2/dasa-bot/env"
 	"github.com/arinji2/dasa-bot/pb"
 	"github.com/bwmarrin/discordgo"
@@ -29,7 +29,7 @@ func (r *RankCommand) HandleRankCutoffResponse(s *discordgo.Session, i *discordg
 		customID := i.MessageComponentData().CustomID
 
 		if customID == "college_send_dm" {
-			bot_utils.HandleSendToDMButton(s, i)
+			buttons.HandleSendToDMButton(s, i)
 			return
 		}
 

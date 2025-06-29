@@ -1,4 +1,5 @@
-package bot_utils
+// Package buttons contains utilities for buttons type interactions
+package buttons
 
 import (
 	"log"

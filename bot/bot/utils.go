@@ -6,7 +6,7 @@ import (
 	"slices"
 	"strings"
 
-	bot_utils "github.com/arinji2/dasa-bot/bot/utils"
+	buttons "github.com/arinji2/dasa-bot/bot/buttons"
 	"github.com/arinji2/dasa-bot/env"
 	"github.com/arinji2/dasa-bot/pb"
 	"github.com/bwmarrin/discordgo"
@@ -108,7 +108,7 @@ func (b *Bot) registerCommands() []*discordgo.ApplicationCommand {
 			}
 		case discordgo.InteractionMessageComponent:
 			if i.MessageComponentData().CustomID == "college_send_dm" {
-				bot_utils.HandleSendToDMButton(s, i)
+				buttons.HandleSendToDMButton(s, i)
 			} else if strings.HasPrefix(i.MessageComponentData().CustomID, "select_branch_") {
 				RankCommand.HandleRankCutoffResponse(s, i)
 			} else if strings.HasPrefix(i.MessageComponentData().CustomID, "select_analyze_branch") {
