@@ -91,6 +91,8 @@ func refreshData(botEnv *env.Bot) {
 
 	RankCommand.PbAdmin = *PbAdmin
 	InsertCommand.PbAdmin = *PbAdmin
+
+	RankCommand.BotChannel = BotChannel
 	if botEnv != nil {
 		RankCommand.BotEnv = *botEnv
 		InsertCommand.BotEnv = *botEnv

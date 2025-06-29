@@ -107,7 +107,7 @@ func (r *RankCommand) showBranchSelect(s *discordgo.Session, i *discordgo.Intera
 		},
 	}
 
-	err = responses.RespondWithEphemeralEmbedAndComponents(s, i, r.BotEnv, title, description, fields, components)
+	err = responses.RespondWithAutoEmbedAndComponents(s, i, r.BotEnv, title, description, fields, components, r.BotChannel)
 	if err != nil {
 		log.Printf("Error sending branch selection UI: %v", err)
 	}
@@ -156,7 +156,7 @@ func (r *RankCommand) showAnalyzeBranchSelect(s *discordgo.Session, i *discordgo
 		rank,
 		map[bool]string{true: "CIWG", false: "Non-CIWG"}[ciwgBool])
 
-	err := responses.RespondWithEphemeralEmbedAndComponents(s, i, r.BotEnv, title, description, nil, components)
+	err := responses.RespondWithAutoEmbedAndComponents(s, i, r.BotEnv, title, description, nil, components, r.BotChannel)
 	if err != nil {
 		log.Printf("Error sending branch selection UI: %v", err)
 	}
@@ -241,7 +241,7 @@ func (r *RankCommand) handleCollegeBranches(s *discordgo.Session, i *discordgo.I
 		},
 	}
 
-	err = responses.RespondWithEphemeralEmbedAndComponents(s, i, r.BotEnv, title, description, fields, components)
+	err = responses.RespondWithAutoEmbedAndComponents(s, i, r.BotEnv, title, description, fields, components, r.BotChannel)
 	if err != nil {
 		log.Printf("Error sending branch selection UI: %v", err)
 	}

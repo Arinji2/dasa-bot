@@ -21,6 +21,7 @@ type RankCommand struct {
 	CollegeData []pb.CollegeCollection
 	PbAdmin     pb.PocketbaseAdmin
 	BotEnv      env.Bot
+	BotChannel  string
 }
 
 func (r *RankCommand) HandleRankCutoffResponse(s *discordgo.Session, i *discordgo.InteractionCreate) {
