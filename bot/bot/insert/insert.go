@@ -149,14 +149,12 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 			defer func() { <-semaphore }() // Release semaphore when done
 
 			_, exists, err := c.PbAdmin.CreateRank(pb.RankCreateRequest{
-				Year:       rank.Year,
-				Round:      rank.Round,
-				JEE_OPEN:   rank.JEE_OPEN,
-				JEE_CLOSE:  rank.JEE_CLOSE,
-				DASA_OPEN:  rank.DASA_OPEN,
-				DASA_CLOSE: rank.DASA_CLOSE,
-				College:    rank.College,
-				Branch:     rank.Branch,
+				Year:      rank.Year,
+				Round:     rank.Round,
+				JEE_OPEN:  rank.JEE_OPEN,
+				JEE_CLOSE: rank.JEE_CLOSE,
+				College:   rank.College,
+				Branch:    rank.Branch,
 			}, rank.Expand.Branch.Ciwg)
 
 			if exists {

@@ -759,30 +759,6 @@
         "type": "number"
       },
       {
-        "hidden": false,
-        "id": "number3667424968",
-        "max": null,
-        "min": null,
-        "name": "dasa_open",
-        "onlyInt": false,
-        "presentable": false,
-        "required": false,
-        "system": false,
-        "type": "number"
-      },
-      {
-        "hidden": false,
-        "id": "number1467696194",
-        "max": null,
-        "min": null,
-        "name": "dasa_close",
-        "onlyInt": false,
-        "presentable": false,
-        "required": false,
-        "system": false,
-        "type": "number"
-      },
-      {
         "cascadeDelete": true,
         "collectionId": "pbc_3051629753",
         "hidden": false,

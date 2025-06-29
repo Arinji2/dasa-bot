@@ -35,16 +35,14 @@ type BranchCollection struct {
 }
 
 type RankCollection struct {
-	ID         string `json:"id"`
-	Year       int    `json:"year"`
-	Round      int    `json:"round"`
-	JEE_OPEN   int    `json:"jee_open"`
-	JEE_CLOSE  int    `json:"jee_close"`
-	DASA_OPEN  int    `json:"dasa_open"`
-	DASA_CLOSE int    `json:"dasa_close"`
-	College    string `json:"college"`
-	Branch     string `json:"branch"`
-	Expand     struct {
+	ID        string `json:"id"`
+	Year      int    `json:"year"`
+	Round     int    `json:"round"`
+	JEE_OPEN  int    `json:"jee_open"`
+	JEE_CLOSE int    `json:"jee_close"`
+	College   string `json:"college"`
+	Branch    string `json:"branch"`
+	Expand    struct {
 		College CollegeCollection `json:"college"`
 		Branch  BranchCollection  `json:"branch"`
 	} `json:"expand"`
@@ -57,12 +55,10 @@ type BranchCreateRequest struct {
 }
 
 type RankCreateRequest struct {
-	Year       int    `json:"year"`
-	Round      int    `json:"round"`
-	JEE_OPEN   int    `json:"jee_open"`
-	JEE_CLOSE  int    `json:"jee_close"`
-	DASA_OPEN  int    `json:"dasa_open"`
-	DASA_CLOSE int    `json:"dasa_close"`
-	College    string `json:"college"`
-	Branch     string `json:"branch"`
+	Year      int    `json:"year"`
+	Round     int    `json:"round"`
+	JEE_OPEN  int    `json:"jee_open"`
+	JEE_CLOSE int    `json:"jee_close"`
+	College   string `json:"college"`
+	Branch    string `json:"branch"`
 }

@@ -217,14 +217,9 @@ func (r *RankCommand) handleCollegeBranches(s *discordgo.Session, i *discordgo.I
 			ciwgString = " (CIWG)"
 		}
 
-		fieldCiwgString := "DASA"
-		if ciwgBool {
-			fieldCiwgString = "CIWG"
-		}
-
 		fields = append(fields, &discordgo.MessageEmbedField{
 			Name:   fmt.Sprintf("%s%s", rank.Expand.Branch.Code, ciwgString),
-			Value:  fmt.Sprintf("JEE OPENING: %d\n JEE CLOSING: %d\n %s OPENING: %d\n %s CLOSING: %d", rank.JEE_OPEN, rank.JEE_CLOSE, fieldCiwgString, rank.DASA_OPEN, fieldCiwgString, rank.DASA_CLOSE),
+			Value:  fmt.Sprintf("JEE OPENING: %d\n JEE CLOSING: %d", rank.JEE_OPEN, rank.JEE_CLOSE),
 			Inline: true,
 		})
 	}
@@ -323,11 +318,6 @@ func (r *RankCommand) handleBranchSelection(s *discordgo.Session, i *discordgo.I
 
 	title := fmt.Sprintf("Cutoffs for %s", collegeData.Name)
 
-	ciwgString := "DASA"
-	if ciwgBool {
-		ciwgString = " CIWG"
-	}
-
 	fields := []*discordgo.MessageEmbedField{
 		{
 			Name:   "JEE Opening Rank",
@@ -337,16 +327,6 @@ func (r *RankCommand) handleBranchSelection(s *discordgo.Session, i *discordgo.I
 		{
 			Name:   "JEE Closing Rank",
 			Value:  fmt.Sprintf("%d", rankData.JEE_CLOSE),
-			Inline: true,
-		},
-		{
-			Name:   fmt.Sprintf("%s Opening Rank", ciwgString),
-			Value:  fmt.Sprintf("%d", rankData.DASA_OPEN),
-			Inline: true,
-		},
-		{
-			Name:   fmt.Sprintf("%s Closing Rank", ciwgString),
-			Value:  fmt.Sprintf("%d", rankData.DASA_CLOSE),
 			Inline: true,
 		},
 	}
