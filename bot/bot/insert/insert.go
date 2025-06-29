@@ -149,12 +149,12 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 			defer func() { <-semaphore }() // Release semaphore when done
 
 			_, exists, err := c.PbAdmin.CreateRank(pb.RankCreateRequest{
-				Year:      rank.Year,
-				Round:     rank.Round,
-				JEE_OPEN:  rank.JEE_OPEN,
-				JEE_CLOSE: rank.JEE_CLOSE,
-				College:   rank.College,
-				Branch:    rank.Branch,
+				Year:     rank.Year,
+				Round:    rank.Round,
+				JeeOpen:  rank.JeeOpen,
+				JeeClose: rank.JeeClose,
+				College:  rank.College,
+				Branch:   rank.Branch,
 			}, rank.Expand.Branch.Ciwg)
 
 			if exists {
@@ -189,7 +189,7 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 			if i > 10 {
 				break
 			}
-			description += fmt.Sprintf("Failed to create rank with Jee Open: %d and College Name %s \n %s \n\n", err.Rank.JEE_OPEN, err.Rank.Expand.College.Name, err.Err.Error())
+			description += fmt.Sprintf("Failed to create rank with Jee Open: %d and College Name %s \n %s \n\n", err.Rank.JeeOpen, err.Rank.Expand.College.Name, err.Err.Error())
 		}
 		responses.RespondWithEmbed(s, i, c.BotEnv, "Error with creating data", description, nil)
 		return
@@ -409,12 +409,12 @@ func (c *InsertCommand) parseRankingData(reader *csv.Reader, year, round int) ([
 		}
 
 		rankCollection := pb.RankCollection{
-			JEE_OPEN:  firstRank,
-			JEE_CLOSE: lastRank,
-			Year:      year,
-			Round:     round,
-			College:   collegeData.ID,
-			Branch:    branchData.ID,
+			JeeOpen:  firstRank,
+			JeeClose: lastRank,
+			Year:     year,
+			Round:    round,
+			College:  collegeData.ID,
+			Branch:   branchData.ID,
 			Expand: struct {
 				College pb.CollegeCollection "json:\"college\""
 				Branch  pb.BranchCollection  "json:\"branch\""

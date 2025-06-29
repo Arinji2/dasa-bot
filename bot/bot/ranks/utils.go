@@ -219,7 +219,7 @@ func (r *RankCommand) handleCollegeBranches(s *discordgo.Session, i *discordgo.I
 
 		fields = append(fields, &discordgo.MessageEmbedField{
 			Name:   fmt.Sprintf("%s%s", rank.Expand.Branch.Code, ciwgString),
-			Value:  fmt.Sprintf("JEE OPENING: %d\n JEE CLOSING: %d", rank.JEE_OPEN, rank.JEE_CLOSE),
+			Value:  fmt.Sprintf("JEE OPENING: %d\n JEE CLOSING: %d", rank.JeeOpen, rank.JeeClose),
 			Inline: true,
 		})
 	}
@@ -321,12 +321,12 @@ func (r *RankCommand) handleBranchSelection(s *discordgo.Session, i *discordgo.I
 	fields := []*discordgo.MessageEmbedField{
 		{
 			Name:   "JEE Opening Rank",
-			Value:  fmt.Sprintf("%d", rankData.JEE_OPEN),
+			Value:  fmt.Sprintf("%d", rankData.JeeOpen),
 			Inline: true,
 		},
 		{
 			Name:   "JEE Closing Rank",
-			Value:  fmt.Sprintf("%d", rankData.JEE_CLOSE),
+			Value:  fmt.Sprintf("%d", rankData.JeeClose),
 			Inline: true,
 		},
 	}
@@ -460,7 +460,7 @@ func (r *RankCommand) displayAnalyzePage(s *discordgo.Session, i *discordgo.Inte
 	for idx, rankData := range matchingRanks {
 		fields = append(fields, &discordgo.MessageEmbedField{
 			Name:   fmt.Sprintf("%d. %s", (currentPage*10)+idx+1, rankData.Expand.College.Name),
-			Value:  fmt.Sprintf("JEE CLOSING: %d\n BRANCH CODE: %s", rankData.JEE_CLOSE, rankData.Expand.Branch.Code),
+			Value:  fmt.Sprintf("JEE CLOSING: %d\n BRANCH CODE: %s", rankData.JeeClose, rankData.Expand.Branch.Code),
 			Inline: true,
 		})
 	}

@@ -139,8 +139,8 @@ func (r *RankCommand) findMatchingRanks(rankStr, deviationStr, branchData string
 			continue
 		}
 
-		openRank := v.JEE_OPEN
-		closeRank := v.JEE_CLOSE
+		openRank := v.JeeOpen
+		closeRank := v.JeeClose
 
 		if openRank == 0 && closeRank == 0 {
 			continue
@@ -156,7 +156,7 @@ func (r *RankCommand) findMatchingRanks(rankStr, deviationStr, branchData string
 	}
 
 	sort.Slice(collegeToRank, func(i, j int) bool {
-		return collegeToRank[i].JEE_CLOSE < collegeToRank[j].JEE_CLOSE
+		return collegeToRank[i].JeeClose < collegeToRank[j].JeeClose
 	})
 
 	var chunks [][]pb.RankCollection
