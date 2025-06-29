@@ -1,3 +1,4 @@
+// Package network contains utilities for making network requests
 package network
 
 import (
