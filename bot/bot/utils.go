@@ -33,16 +33,20 @@ func checkPermissions(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
-func checkChannel(s *discordgo.Session, i *discordgo.InteractionCreate) bool {
+func checkChannel(s *discordgo.Session, i *discordgo.InteractionCreate, isAdminCheck bool) bool {
 	isAdmin := isAdmin(i)
 	if isAdmin {
 		return true
 	}
 
-	// TODO: Incorporate Actual Allowed Channels
-	// hasPermission := slices.Contains(AllowedChannels, i.ChannelID)
-	// if !hasPermission {
-	if false {
+	var hasPermission bool
+	if isAdminCheck {
+		hasPermission = AdminChannel == i.ChannelID
+	} else {
+		hasPermission = BotChannel == i.ChannelID
+	}
+
+	if !hasPermission {
 		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
