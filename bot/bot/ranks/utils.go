@@ -397,6 +397,10 @@ func (r *RankCommand) displayAnalyzePage(s *discordgo.Session, i *discordgo.Inte
 		return
 	}
 
+	latestYear := r.RankData[0].Year
+	latestRound := r.RankData[0].Round
+	title := "Chances based off of your JEE(Main) CRL-Rank"
+
 	matchingRanks := matchingRankChunks[currentPage]
 	description := ""
 	if ciwgBool {
@@ -404,7 +408,7 @@ func (r *RankCommand) displayAnalyzePage(s *discordgo.Session, i *discordgo.Inte
 	} else {
 		description += fmt.Sprintf("Course: %s\n", strings.Split(branchData, ":")[0])
 	}
-	description += fmt.Sprintf("Page %d of %d", currentPage+1, len(matchingRankChunks))
+	description += fmt.Sprintf("Year: %d\nRound: %d\nPage %d of %d", latestYear, latestRound, currentPage+1, len(matchingRankChunks))
 
 	// Create pagination buttons
 	var components []discordgo.MessageComponent
@@ -453,8 +457,6 @@ func (r *RankCommand) displayAnalyzePage(s *discordgo.Session, i *discordgo.Inte
 	components = append(components, discordgo.ActionsRow{
 		Components: buttons,
 	})
-
-	title := "Chances based off of your JEE(Main) CRL-Rank"
 
 	fields := []*discordgo.MessageEmbedField{}
 	for idx, rankData := range matchingRanks {

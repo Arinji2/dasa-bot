@@ -111,7 +111,9 @@ func (r *RankCommand) findMatchingRanks(rankStr, deviationStr, branchData string
 		})
 	}
 
-	latestYear := r.RankData[len(r.RankData)-1].Year
+	latestYear := r.RankData[0].Year
+	latestRound := r.RankData[0].Round
+
 	for _, v := range r.RankData {
 		if v.Expand.Branch.Ciwg != ciwg {
 			continue
@@ -121,7 +123,7 @@ func (r *RankCommand) findMatchingRanks(rankStr, deviationStr, branchData string
 			continue
 		}
 
-		if v.Round != 3 {
+		if v.Round != latestRound {
 			continue
 		}
 

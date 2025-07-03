@@ -22,6 +22,7 @@ func (p *PocketbaseAdmin) GetAllRanks() ([]RankCollection, error) {
 	params.Add("perPage", strconv.Itoa(perPage))
 	params.Add("expand", "college,branch")
 	params.Add("page", "1")
+	params.Add("sort", "-year,-round")
 
 	parsedURL.RawQuery = params.Encode()
 
@@ -62,6 +63,7 @@ func (p *PocketbaseAdmin) GetAllRanks() ([]RankCollection, error) {
 			query.Add("perPage", strconv.Itoa(perPage))
 			query.Add("page", strconv.Itoa(page))
 			query.Add("expand", "college,branch")
+			query.Add("sort", "-year,-round")
 			pageURL.RawQuery = query.Encode()
 
 			body, err := network.MakeAuthenticatedRequest(&pageURL, "GET", request{}, p.Token)
