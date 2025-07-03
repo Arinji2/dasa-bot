@@ -55,6 +55,26 @@ func (b *Bot) Run(pbAdmin *pb.PocketbaseAdmin) {
 	b.Session.UpdateCustomStatus("Padhlo chahe kahi se, selection hoga dasa se")
 	b.Commands = createdCommands
 
+	b.Session.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
+		if m.Author.ID == s.State.User.ID {
+			return
+		}
+
+		for _, user := range m.Mentions {
+			if user.ID == s.State.User.ID {
+				msgRef := &discordgo.MessageReference{
+					MessageID: m.ID,
+					ChannelID: m.ChannelID,
+					GuildID:   m.GuildID,
+				}
+				_, _ = s.ChannelMessageSendReply(m.ChannelID,
+					fmt.Sprintf("Hey <@%s>! Use `/cutoff` or `/analyze` to get started.", m.Author.ID),
+					msgRef,
+				)
+				break
+			}
+		}
+	})
 	log.Println("Bot is now running.")
 
 	stop := make(chan os.Signal, 1)
