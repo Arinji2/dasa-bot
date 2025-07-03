@@ -83,7 +83,7 @@ func RespondWithAutoEmbedAndComponents(
 	components []discordgo.MessageComponent,
 	BotChannel string,
 ) error {
-	isEphemeral := i.ChannelID == BotChannel
+	isEphemeral := i.ChannelID != BotChannel
 
 	data := &discordgo.InteractionResponseData{
 		Embeds: []*discordgo.MessageEmbed{
