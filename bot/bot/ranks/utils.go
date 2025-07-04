@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"slices"
-	"strconv"
 	"strings"
 
+	"github.com/arinji2/dasa-bot/convert"
 	"github.com/arinji2/dasa-bot/pb"
 	responses "github.com/arinji2/dasa-bot/responses"
 	"github.com/bwmarrin/discordgo"
@@ -33,14 +33,14 @@ func (r *RankCommand) showBranchSelect(s *discordgo.Session, i *discordgo.Intera
 	ciwg := data.Options[2].StringValue()
 	round := data.Options[3].StringValue()
 
-	yearInt, err := strconv.Atoi(year)
+	yearInt, err := convert.StringToInt(year)
 	if err != nil {
 		log.Printf("Error converting year to int: %v", err)
 		responses.RespondWithEphemeralError(s, i, "Invalid year format")
 		return
 	}
 
-	roundInt, err := strconv.Atoi(round)
+	roundInt, err := convert.StringToInt(round)
 	if err != nil {
 		log.Printf("Error converting round to int: %v", err)
 		responses.RespondWithEphemeralError(s, i, "Invalid round format")
@@ -79,7 +79,7 @@ func (r *RankCommand) showBranchSelect(s *discordgo.Session, i *discordgo.Intera
 			options = append(options, discordgo.SelectMenuOption{
 				Label:       branch.Name,
 				Description: desc,
-				Value:       fmt.Sprintf("%s,%s,%s,%s,%s", collegeID, year, ciwg, round, branch.Code),
+				Value:       fmt.Sprintf("%s:%s:%s:%s:%s", collegeID, year, ciwg, round, branch.Code),
 			})
 		}
 
@@ -137,7 +137,7 @@ func (r *RankCommand) showAnalyzeBranchSelect(s *discordgo.Session, i *discordgo
 		options = append(options, discordgo.SelectMenuOption{
 			Label:       branchName,
 			Description: branchName,
-			Value:       fmt.Sprintf("%s,%s,%s,%d", rank, ciwg, deviation, i),
+			Value:       fmt.Sprintf("%s:%s:%s:%d", rank, ciwg, deviation, i),
 		})
 	}
 
@@ -168,14 +168,14 @@ func (r *RankCommand) handleCollegeBranches(s *discordgo.Session, i *discordgo.I
 	ciwg := data.Options[2].StringValue()
 	round := data.Options[3].StringValue()
 
-	yearInt, err := strconv.Atoi(year)
+	yearInt, err := convert.StringToInt(year)
 	if err != nil {
 		log.Printf("Error converting year to int: %v", err)
 		responses.RespondWithEphemeralError(s, i, "Invalid year format")
 		return
 	}
 
-	roundInt, err := strconv.Atoi(round)
+	roundInt, err := convert.StringToInt(round)
 	if err != nil {
 		log.Printf("Error converting round to int: %v", err)
 		responses.RespondWithEphemeralError(s, i, "Invalid round format")
@@ -249,8 +249,8 @@ func (r *RankCommand) handleBranchSelection(s *discordgo.Session, i *discordgo.I
 		return
 	}
 
-	// Format: collegeID,year,ciwg,round,branchCode
-	params := strings.Split(values[0], ",")
+	// Format: collegeID:year:ciwg:round:branchCode
+	params := strings.Split(values[0], ":")
 	if len(params) != 5 {
 		log.Printf("Invalid branch selection value format: %v", values[0])
 		return
@@ -262,13 +262,13 @@ func (r *RankCommand) handleBranchSelection(s *discordgo.Session, i *discordgo.I
 	round := params[3]
 	branchCode := params[4]
 
-	yearInt, err := strconv.Atoi(year)
+	yearInt, err := convert.StringToInt(year)
 	if err != nil {
 		log.Printf("Error converting year to int: %v", err)
 		return
 	}
 
-	roundInt, err := strconv.Atoi(round)
+	roundInt, err := convert.StringToInt(round)
 	if err != nil {
 		log.Printf("Error converting round to int: %v", err)
 		return
@@ -347,8 +347,8 @@ func (r *RankCommand) handleAnalyzeSelection(s *discordgo.Session, i *discordgo.
 		return
 	}
 
-	// Format: rank,ciwg,deviation,branchID
-	params := strings.Split(values[0], ",")
+	// Format: rank:ciwg:deviation:branchID
+	params := strings.Split(values[0], ":")
 	if len(params) != 4 {
 		log.Printf("Invalid branch selection value format for analyze selection")
 		return
@@ -359,7 +359,7 @@ func (r *RankCommand) handleAnalyzeSelection(s *discordgo.Session, i *discordgo.
 	deviation := params[2]
 	branchCode := params[3]
 
-	branchID, err := strconv.Atoi(branchCode)
+	branchID, err := convert.StringToInt(branchCode)
 	if err != nil {
 		log.Printf("Error converting branch code to int: %v", err)
 		return
@@ -502,13 +502,13 @@ func (r *RankCommand) HandleAnalyzePagination(s *discordgo.Session, i *discordgo
 	branchCode := parts[4]
 	pageStr := parts[5]
 
-	page, err := strconv.Atoi(pageStr)
+	page, err := convert.StringToInt(pageStr)
 	if err != nil {
 		log.Printf("Error converting page to int: %v", err)
 		return
 	}
 
-	branchID, err := strconv.Atoi(branchCode)
+	branchID, err := convert.StringToInt(branchCode)
 	if err != nil {
 		log.Printf("Error converting branch code to int: %v", err)
 		return

@@ -4,9 +4,9 @@ import (
 	"errors"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 
+	"github.com/arinji2/dasa-bot/convert"
 	"github.com/arinji2/dasa-bot/pb"
 )
 
@@ -70,12 +70,12 @@ func (r *RankCommand) specificRank(collegeID, branchCode string, ciwg bool, year
 }
 
 func (r *RankCommand) findMatchingRanks(rankStr, deviationStr, branchData string, ciwg bool) ([][]pb.RankCollection, error) {
-	inputRank, err := strconv.Atoi(rankStr)
+	inputRank, err := convert.StringToInt(rankStr)
 	if err != nil {
 		return nil, errors.New("invalid rank value")
 	}
 
-	deviationPercent, err := strconv.Atoi(deviationStr)
+	deviationPercent, err := convert.StringToInt(deviationStr)
 	if err != nil {
 		return nil, errors.New("invalid deviation percentage")
 	}

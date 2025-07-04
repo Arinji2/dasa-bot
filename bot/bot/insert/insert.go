@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/arinji2/dasa-bot/convert"
 	"github.com/arinji2/dasa-bot/env"
 	"github.com/arinji2/dasa-bot/pb"
 	responses "github.com/arinji2/dasa-bot/responses"
@@ -35,7 +36,7 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 	var logs []string
 	year := data.Options[1].StringValue()
 
-	yearInt, err := strconv.Atoi(year)
+	yearInt, err := convert.StringToInt(year)
 	if err != nil {
 		log.Printf("Error converting year to int: %v", err)
 		responses.RespondWithEphemeralError(s, i, "Invalid year format")
@@ -44,7 +45,7 @@ func (c *InsertCommand) HandleInsertData(s *discordgo.Session, i *discordgo.Inte
 
 	round := data.Options[2].StringValue()
 
-	roundInt, err := strconv.Atoi(round)
+	roundInt, err := convert.StringToInt(round)
 	if err != nil {
 		log.Printf("Error converting round to int: %v", err)
 		responses.RespondWithEphemeralError(s, i, "Invalid round format")
@@ -298,7 +299,7 @@ func (c *InsertCommand) parseRankingData(reader *csv.Reader, year, round int) ([
 			continue
 		}
 
-		firstRank, err := strconv.Atoi(record[4])
+		firstRank, err := convert.StringToInt(record[4])
 		if err != nil {
 			errors = append(errors, RankParseError{
 				Line:    lineNumber,
@@ -308,7 +309,7 @@ func (c *InsertCommand) parseRankingData(reader *csv.Reader, year, round int) ([
 			continue
 		}
 
-		lastRank, err := strconv.Atoi(record[5])
+		lastRank, err := convert.StringToInt(record[5])
 		if err != nil {
 			errors = append(errors, RankParseError{
 				Line:    lineNumber,
