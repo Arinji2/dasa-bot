@@ -130,7 +130,7 @@ func (b *Bot) registerCommands() []*discordgo.ApplicationCommand {
 
 	log.Println("Adding commands...")
 
-	createdCommands, err := b.Session.ApplicationCommandBulkOverwrite(b.Session.State.User.ID, b.GuildID, commands)
+	createdCommands, err := b.Session.ApplicationCommandBulkOverwrite(b.Session.State.User.ID, "", commands)
 	if err != nil {
 		log.Panicf("Cannot create commands: %v", err)
 	}
