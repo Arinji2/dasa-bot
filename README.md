@@ -15,9 +15,18 @@ The Dasa Bot is a Discord Bot aimed at helping DASA members with their DASA rank
 
 ## How Do I Use It?
 
-Our **Discord server** has the bot and its DB hosted 24/7, feel free to join and check it out
+You can add the bot to your server by this [link](https://discord.com/oauth2/authorize?client_id=1374012881938677810)
 
-Join us here: [Discord Invite](https://discord.gg/VJCYUjf6bu)
+Once added, you can use the following commands:
+
+- `/cutoff` - View Cutoffs for Colleges and Branches
+  Example: `/cutoff college: 1j77gb0be14132d year: 2022 ciwg: true round: 3`
+- `/analyze` - Analyze your JEE rank and figure out which college you can get into
+  Example: `/analyze rank: 1,00,000 ciwg: true`
+
+<!-- Our **Discord server** has the bot and its DB hosted 24/7, feel free to join and check it out -->
+<!---->
+<!-- Join us here: [Discord Invite](https://discord.gg/VJCYUjf6bu) -->
 
 ---
 
@@ -56,6 +65,6 @@ All of the values are required to run the bot.
 
 ### Built by Arinji
 
-This project was proudly built by [Arinji](https://www.arinji.com/). Check out my website for more cool projects!
+This project was proudly built by [Arinji](https://www.arinji.com/). Check out my website for more cool projects! Feel free to hit me up if the bot breaks or just dosen't work.
 
 ---
